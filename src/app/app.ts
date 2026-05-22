@@ -8,6 +8,7 @@ import { switchMap, of, filter, take } from 'rxjs';
 import { AuthService } from './core/services/auth.service';
 import { CoupleService } from './core/services/couple.service';
 import { NotificationService } from './core/services/notification.service';
+import { APP_VERSION } from './version';
 
 @Component({
   selector: 'app-root',
@@ -22,9 +23,12 @@ import { NotificationService } from './core/services/notification.service';
               <span class="header-heart">♡</span>
               <span class="couple-name">{{ (couple$ | async)?.name || 'Nosotros' }}</span>
             </div>
-            <button mat-icon-button class="logout-btn" (click)="auth.logout()" aria-label="Cerrar sesión">
-              <mat-icon>logout</mat-icon>
-            </button>
+            <div class="header-right">
+              <span class="version-tag">v{{ version }}</span>
+              <button mat-icon-button class="logout-btn" (click)="auth.logout()" aria-label="Cerrar sesión">
+                <mat-icon>logout</mat-icon>
+              </button>
+            </div>
           </header>
 
           <main class="content">
@@ -89,6 +93,11 @@ import { NotificationService } from './core/services/notification.service';
       color: white;
       letter-spacing: 0.3px;
     }
+    .header-right { display: flex; align-items: center; gap: 4px; }
+    .version-tag {
+      font-size: 0.6rem; color: rgba(255,255,255,0.45);
+      font-weight: 500; letter-spacing: 0.3px;
+    }
     .logout-btn { color: rgba(255,255,255,0.8); }
 
     .content { flex: 1; overflow-y: auto; padding-bottom: 80px; }
@@ -121,6 +130,7 @@ import { NotificationService } from './core/services/notification.service';
 })
 export class App implements OnInit {
   auth = inject(AuthService);
+  readonly version = APP_VERSION;
   private coupleService = inject(CoupleService);
   private notificationService = inject(NotificationService);
   private destroyRef = inject(DestroyRef);
