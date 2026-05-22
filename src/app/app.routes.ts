@@ -22,6 +22,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'photos',
+    loadComponent: () => import('./features/photos/photos.component').then(m => m.PhotosComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'reminders',
     loadComponent: () => import('./features/reminders/reminders.component').then(m => m.RemindersComponent),
     canActivate: [authGuard],

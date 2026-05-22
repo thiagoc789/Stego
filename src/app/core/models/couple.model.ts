@@ -41,3 +41,12 @@ export interface Reminder {
   done: boolean;
   createdAt: Date;
 }
+
+export interface Photo {
+  id: string;
+  url: string;
+  storagePath: string;
+  uploaderUid: string;
+  caption: string;
+  createdAt: Date;
+}
