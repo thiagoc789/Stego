@@ -96,19 +96,31 @@ const CARD_COLORS = [
     @if (openedNote()) {
       <div class="modal-backdrop" (click)="closeNote()">
         <div class="modal-card" [style.background]="cardColor(openedNote()!)" (click)="$event.stopPropagation()">
-          <button class="modal-x" (click)="closeNote()">✕</button>
-          @if (openedNote()!.title) {
-            <p class="modal-title">{{ openedNote()!.title }}</p>
-          }
-          <p class="modal-body" [class.no-title]="!openedNote()!.title">{{ openedNote()!.text }}</p>
-          <div class="modal-footer">
-            <div class="modal-meta">
-              <span class="card-author" [class.mine]="isMyNote(openedNote()!)">{{ authorName(openedNote()!) }}</span>
-              <span class="modal-date">{{ openedNote()!.createdAt | date:'d MMM yyyy · HH:mm' }}</span>
+
+          <!-- Header: title + action buttons -->
+          <div class="modal-header">
+            <p class="modal-title">{{ openedNote()!.title || '' }}</p>
+            <div class="modal-actions">
+              <button class="modal-icon-btn danger" (click)="deleteNote(openedNote()!); closeNote()" title="Eliminar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                </svg>
+              </button>
+              <button class="modal-icon-btn" (click)="closeNote()" title="Cerrar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
             </div>
-            <button class="modal-delete-btn" (click)="deleteNote(openedNote()!); closeNote()">
-              <mat-icon>delete_outline</mat-icon>
-            </button>
+          </div>
+
+          <!-- Body -->
+          <p class="modal-body">{{ openedNote()!.text }}</p>
+
+          <!-- Footer: author + date -->
+          <div class="modal-footer">
+            <span class="card-author" [class.mine]="isMyNote(openedNote()!)">{{ authorName(openedNote()!) }}</span>
+            <span class="modal-date">{{ openedNote()!.createdAt | date:'d MMM yyyy · HH:mm' }}</span>
           </div>
         </div>
       </div>
@@ -267,62 +279,65 @@ const CARD_COLORS = [
     /* ── Modal ── */
     .modal-backdrop {
       position: fixed; inset: 0; z-index: 100;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.52);
       display: flex; align-items: center; justify-content: center;
       padding: 1.5rem;
       animation: fadeIn 0.15s ease;
     }
     @keyframes fadeIn {
-      from { opacity: 0; }
-      to   { opacity: 1; }
+      from { opacity: 0; } to { opacity: 1; }
     }
     .modal-card {
-      width: 100%; max-width: 400px; max-height: 78vh;
-      border-radius: 20px; padding: 1.3rem;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      width: 100%; max-width: 420px; max-height: 80vh;
+      border-radius: 20px; padding: 0;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.28);
       border: 1px solid rgba(0,0,0,0.08);
-      display: flex; flex-direction: column; gap: 0.7rem;
-      overflow-y: auto; position: relative;
+      display: flex; flex-direction: column;
+      overflow: hidden;
       animation: scaleIn 0.16s ease;
     }
     @keyframes scaleIn {
       from { transform: scale(0.93); opacity: 0; }
       to   { transform: scale(1); opacity: 1; }
     }
-    .modal-x {
-      position: absolute; top: 10px; right: 10px;
-      width: 30px; height: 30px; border-radius: 50%;
-      border: none; background: rgba(0,0,0,0.07); color: #555;
-      font-size: 0.85rem; line-height: 1;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: background 0.15s;
-      &:hover { background: rgba(0,0,0,0.14); }
+
+    .modal-header {
+      display: flex; align-items: flex-start; gap: 0.5rem;
+      padding: 1.1rem 1rem 0.7rem;
+      border-bottom: 1px solid rgba(0,0,0,0.07);
     }
     .modal-title {
-      margin: 0 2rem 0 0;
-      font-size: 1.1rem; font-weight: 700; color: #1a1a1a; line-height: 1.4;
+      flex: 1; margin: 0;
+      font-size: 1.05rem; font-weight: 700; color: #1a1a1a;
+      line-height: 1.4; min-height: 1.4em;
+      word-break: break-word;
     }
+    .modal-actions {
+      display: flex; gap: 0.3rem; flex-shrink: 0; margin-top: -2px;
+    }
+    .modal-icon-btn {
+      width: 34px; height: 34px; border-radius: 50%; border: none;
+      background: rgba(0,0,0,0.06); color: #555;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; transition: background 0.15s, color 0.15s;
+      svg { width: 16px; height: 16px; }
+      &:hover { background: rgba(0,0,0,0.12); color: #222; }
+      &.danger { color: #c62828; background: rgba(198,40,40,0.08); }
+      &.danger:hover { background: rgba(198,40,40,0.16); color: #b71c1c; }
+    }
+
     .modal-body {
-      margin: 0; flex: 1;
-      font-size: 0.95rem; color: #333; line-height: 1.75;
+      flex: 1; overflow-y: auto;
+      margin: 0; padding: 0.9rem 1rem;
+      font-size: 0.97rem; color: #333; line-height: 1.75;
       white-space: pre-wrap; word-break: break-word;
-      &.no-title { font-size: 1rem; margin-top: 1.2rem; }
     }
     .modal-footer {
       display: flex; align-items: center; justify-content: space-between;
-      padding-top: 0.75rem; border-top: 1px solid rgba(0,0,0,0.08);
-      margin-top: auto;
+      padding: 0.6rem 1rem 0.8rem;
+      border-top: 1px solid rgba(0,0,0,0.07);
     }
-    .modal-meta { display: flex; flex-direction: column; gap: 2px; }
     .modal-date { font-size: 0.72rem; color: #aaa; }
-    .modal-delete-btn {
-      width: 36px; height: 36px; border-radius: 50%;
-      border: none; background: transparent; color: #ccc;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: background 0.15s, color 0.15s;
-      mat-icon { font-size: 1.2rem; height: 1.2rem; width: 1.2rem; }
-      &:hover { background: #fce4ec; color: #e91e63; }
-    }
   `],
 })
 export class NotesComponent implements OnInit {
