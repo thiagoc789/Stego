@@ -1,9 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { Firestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, onSnapshot, query, orderBy, deleteDoc } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
-import { Couple, DailyAnswer, Note, Reminder } from '../models/couple.model';
+import { Couple, DailyAnswer, KnowledgeRound, Note, Reminder } from '../models/couple.model';
+import { AppUser } from '../models/user.model';
 import { AuthService } from './auth.service';
 import { DAILY_QUESTIONS } from '../data/questions';
+import { KNOWLEDGE_QUESTIONS, KnowledgeQuestion } from '../data/knowledge-questions';
 
 @Injectable({ providedIn: 'root' })
 export class CoupleService {
@@ -14,6 +16,7 @@ export class CoupleService {
 
   async createCouple(name: string): Promise<string> {
     const uid = this.auth.currentUserUid!;
+    const user1DisplayName = await this.getUserDisplayName(uid);
     const inviteCode = this.generateCode();
     const coupleRef = doc(collection(this.firestore, 'couples'));
 
@@ -21,13 +24,14 @@ export class CoupleService {
       name,
       inviteCode,
       user1Uid: uid,
+      user1DisplayName,
       user2Uid: null,
+      user2DisplayName: null,
       createdAt: new Date(),
     };
 
     await setDoc(coupleRef, couple);
     await updateDoc(doc(this.firestore, `users/${uid}`), { coupleId: coupleRef.id });
-    // Register invite code for fast lookup when partner joins
     await setDoc(doc(this.firestore, 'meta/inviteCodes'), { [inviteCode]: coupleRef.id }, { merge: true });
     return inviteCode;
   }
@@ -48,7 +52,8 @@ export class CoupleService {
     if (couple.user2Uid && couple.user2Uid !== uid) return false;
     if (couple.user1Uid === uid) return false;
 
-    await updateDoc(coupleRef, { user2Uid: uid });
+    const user2DisplayName = await this.getUserDisplayName(uid);
+    await updateDoc(coupleRef, { user2Uid: uid, user2DisplayName });
     await updateDoc(doc(this.firestore, `users/${uid}`), { coupleId });
     return true;
   }
@@ -64,11 +69,16 @@ export class CoupleService {
     });
   }
 
+  getDisplayName(uid: string, couple: Couple): string {
+    if (uid === couple.user1Uid) return couple.user1DisplayName ?? 'Pareja';
+    if (uid === couple.user2Uid) return couple.user2DisplayName ?? 'Pareja';
+    return 'Desconocido';
+  }
+
   // ── Daily Question ───────────────────────────────────────────────────
 
   getTodayQuestion(): string {
-    const dayOfYear = this.getDayOfYear();
-    return DAILY_QUESTIONS[dayOfYear % DAILY_QUESTIONS.length];
+    return DAILY_QUESTIONS[this.getDayOfYear() % DAILY_QUESTIONS.length];
   }
 
   getTodayAnswers$(coupleId: string): Observable<DailyAnswer | null> {
@@ -97,6 +107,50 @@ export class CoupleService {
         answerUser2: isUser1 ? null : answer,
       } satisfies DailyAnswer);
     }
+  }
+
+  // ── Knowledge Game ───────────────────────────────────────────────────
+
+  getTodayKnowledgeQuestion(): KnowledgeQuestion {
+    // Offset by 1 so it doesn't sync with the daily question index
+    return KNOWLEDGE_QUESTIONS[(this.getDayOfYear() + 1) % KNOWLEDGE_QUESTIONS.length];
+  }
+
+  getKnowledgeRound$(coupleId: string): Observable<KnowledgeRound | null> {
+    const today = this.todayKey();
+    return new Observable(observer => {
+      const ref = doc(this.firestore, `couples/${coupleId}/knowledgeRounds/${today}`);
+      return onSnapshot(ref, snap => {
+        observer.next(snap.exists() ? (snap.data() as KnowledgeRound) : null);
+      });
+    });
+  }
+
+  async saveKnowledgeOwnAnswer(coupleId: string, isUser1: boolean, answer: string): Promise<void> {
+    const today = this.todayKey();
+    const ref = doc(this.firestore, `couples/${coupleId}/knowledgeRounds/${today}`);
+    const field = isUser1 ? 'user1OwnAnswer' : 'user2OwnAnswer';
+    const snap = await getDoc(ref);
+
+    if (snap.exists()) {
+      await updateDoc(ref, { [field]: answer });
+    } else {
+      await setDoc(ref, {
+        date: today,
+        questionId: this.getTodayKnowledgeQuestion().id,
+        user1OwnAnswer: isUser1 ? answer : null,
+        user1Guess: null,
+        user2OwnAnswer: isUser1 ? null : answer,
+        user2Guess: null,
+      } satisfies KnowledgeRound);
+    }
+  }
+
+  async saveKnowledgeGuess(coupleId: string, isUser1: boolean, guess: string): Promise<void> {
+    const today = this.todayKey();
+    const ref = doc(this.firestore, `couples/${coupleId}/knowledgeRounds/${today}`);
+    const field = isUser1 ? 'user1Guess' : 'user2Guess';
+    await updateDoc(ref, { [field]: guess });
   }
 
   // ── Notes ────────────────────────────────────────────────────────────
@@ -159,6 +213,11 @@ export class CoupleService {
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────
+
+  private async getUserDisplayName(uid: string): Promise<string> {
+    const snap = await getDoc(doc(this.firestore, `users/${uid}`));
+    return (snap.data() as AppUser)?.displayName ?? 'Usuario';
+  }
 
   private generateCode(): string {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';

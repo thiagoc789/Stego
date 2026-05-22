@@ -2,23 +2,18 @@ import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { filter, take } from 'rxjs';
+import { filter, take, switchMap } from 'rxjs';
 import { CoupleService } from '../../core/services/couple.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Note } from '../../core/models/couple.model';
+import { Couple, Note } from '../../core/models/couple.model';
 
 @Component({
   selector: 'app-notes',
   standalone: true,
-  imports: [DatePipe, FormsModule, MatButtonModule, MatIconModule, MatInputModule, MatFormFieldModule],
+  imports: [DatePipe, FormsModule, MatIconModule],
   template: `
     <div class="notes-page">
-
-      <!-- Add note -->
       <div class="add-note-card">
         <textarea
           class="note-input"
@@ -27,202 +22,128 @@ import { Note } from '../../core/models/couple.model';
           rows="3"
         ></textarea>
         <div class="add-note-footer">
-          <button
-            class="send-btn"
-            (click)="addNote()"
-            [disabled]="!newNoteText.trim()"
-          >
+          <button class="send-btn" (click)="addNote()" [disabled]="!newNoteText.trim()">
             <mat-icon>send</mat-icon>
           </button>
         </div>
       </div>
 
-      <!-- Notes list -->
       <div class="notes-list">
         @for (note of notes(); track note.id) {
           <div class="note-card" [class.mine]="isMyNote(note)">
-            <button class="delete-btn" (click)="deleteNote(note)" aria-label="Eliminar">
-              ×
-            </button>
+            <button class="delete-btn" (click)="deleteNote(note)">×</button>
+            <span class="note-author">{{ authorName(note) }}</span>
             <p class="note-text">{{ note.text }}</p>
             <span class="note-time">{{ note.createdAt | date:'d MMM · HH:mm' }}</span>
           </div>
         } @empty {
           <div class="empty-state">
-            <span class="empty-heart">💌</span>
+            <span>💌</span>
             <p>Sin notas aún</p>
-            <span>¡Escribe algo bonito para los dos!</span>
+            <span class="empty-sub">¡Escribe algo bonito para los dos!</span>
           </div>
         }
       </div>
-
     </div>
   `,
   styles: [`
-    .notes-page {
-      padding: 1.2rem;
-      max-width: 480px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 1.2rem;
-    }
+    .notes-page { padding: 1.2rem; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.2rem; }
 
-    /* ── Add note card ── */
     .add-note-card {
-      background: white;
-      border-radius: 18px;
-      padding: 1rem 1rem 0.75rem;
-      box-shadow: 0 4px 20px rgba(194, 24, 91, 0.1);
-      border: 1.5px solid #fce4ec;
+      background: white; border-radius: 18px; padding: 1rem 1rem 0.75rem;
+      box-shadow: 0 4px 20px rgba(194,24,91,0.1); border: 1.5px solid #fce4ec;
     }
     .note-input {
-      width: 100%;
-      border: none;
-      outline: none;
-      resize: none;
-      font-size: 0.95rem;
-      line-height: 1.6;
-      color: #333;
-      background: transparent;
-      font-family: inherit;
-      box-sizing: border-box;
+      width: 100%; border: none; outline: none; resize: none;
+      font-size: 0.95rem; line-height: 1.6; color: #333;
+      background: transparent; font-family: inherit; box-sizing: border-box;
+      &::placeholder { color: #ccc; }
     }
-    .note-input::placeholder { color: #ccc; }
     .add-note-footer {
-      display: flex;
-      justify-content: flex-end;
-      padding-top: 0.5rem;
-      border-top: 1px solid #fce4ec;
-      margin-top: 0.5rem;
+      display: flex; justify-content: flex-end;
+      padding-top: 0.5rem; border-top: 1px solid #fce4ec; margin-top: 0.5rem;
     }
     .send-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: none;
+      width: 40px; height: 40px; border-radius: 50%; border: none;
       background: linear-gradient(135deg, #e91e63, #9c27b0);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      box-shadow: 0 3px 10px rgba(233, 30, 99, 0.35);
-
+      color: white; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s ease;
+      box-shadow: 0 3px 10px rgba(233,30,99,0.35);
       mat-icon { font-size: 1.1rem; height: 1.1rem; width: 1.1rem; }
-
-      &:disabled {
-        background: #eee;
-        box-shadow: none;
-        cursor: default;
-        color: #bbb;
-      }
-      &:not(:disabled):hover {
-        transform: scale(1.08);
-        box-shadow: 0 4px 14px rgba(233, 30, 99, 0.45);
-      }
+      &:disabled { background: #eee; box-shadow: none; cursor: default; color: #bbb; }
+      &:not(:disabled):hover { transform: scale(1.08); }
     }
 
-    /* ── Note cards ── */
-    .notes-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.9rem;
-    }
+    .notes-list { display: flex; flex-direction: column; gap: 0.9rem; }
     .note-card {
-      position: relative;
-      background: white;
-      border-radius: 16px;
-      padding: 1rem 2.5rem 0.8rem 1.2rem;
+      position: relative; background: white; border-radius: 16px;
+      padding: 0.8rem 2.5rem 0.8rem 1.2rem;
       box-shadow: 0 3px 14px rgba(0,0,0,0.06);
       border-left: 4px solid #f48fb1;
       transition: transform 0.15s ease;
-
       &:hover { transform: translateY(-1px); }
-
-      &.mine {
-        border-left-color: #e91e63;
-        background: linear-gradient(135deg, #fff, #fff9fb);
-      }
+      &.mine { border-left-color: #e91e63; background: linear-gradient(135deg, #fff, #fff9fb); }
     }
-    .note-text {
-      margin: 0 0 0.5rem;
-      font-size: 0.95rem;
-      line-height: 1.6;
-      color: #333;
-      white-space: pre-wrap;
-      word-break: break-word;
+    .note-author {
+      display: block; font-size: 0.7rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;
     }
-    .note-time {
-      font-size: 0.72rem;
-      color: #bbb;
-    }
+    .mine .note-author { color: #e91e63; }
+    .note-card:not(.mine) .note-author { color: #9c27b0; }
+    .note-text { margin: 0 0 0.5rem; font-size: 0.95rem; line-height: 1.6; color: #333; white-space: pre-wrap; word-break: break-word; }
+    .note-time { font-size: 0.72rem; color: #bbb; }
     .delete-btn {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      border: none;
-      background: transparent;
-      color: #ddd;
-      font-size: 1.1rem;
-      line-height: 1;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.15s ease;
-      padding: 0;
-
-      &:hover {
-        background: #fce4ec;
-        color: #e91e63;
-      }
+      position: absolute; top: 8px; right: 8px;
+      width: 26px; height: 26px; border-radius: 50%; border: none;
+      background: transparent; color: #ddd; font-size: 1.1rem;
+      line-height: 1; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; transition: all 0.15s ease; padding: 0;
+      &:hover { background: #fce4ec; color: #e91e63; }
     }
 
-    /* ── Empty state ── */
     .empty-state {
-      text-align: center;
-      padding: 3rem 1rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.5rem;
+      text-align: center; padding: 3rem 1rem;
+      display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+      font-size: 3rem;
     }
-    .empty-heart { font-size: 3rem; }
     .empty-state p { margin: 0; font-size: 1rem; font-weight: 500; color: #aaa; }
-    .empty-state span { font-size: 0.85rem; color: #ccc; }
+    .empty-sub { font-size: 0.85rem; color: #ccc; }
   `],
 })
 export class NotesComponent implements OnInit {
   private coupleService = inject(CoupleService);
-  private authService = inject(AuthService);
-  private destroyRef = inject(DestroyRef);
+  private authService  = inject(AuthService);
+  private destroyRef   = inject(DestroyRef);
 
-  notes = signal<Note[]>([]);
+  notes  = signal<Note[]>([]);
+  couple = signal<Couple | null>(null);
   newNoteText = '';
   private coupleId = '';
-  private myUid = '';
+  private myUid    = '';
 
   ngOnInit() {
     this.authService.currentUser$.pipe(
       filter(u => !!u?.coupleId),
       take(1),
+      switchMap(user => {
+        this.coupleId = user!.coupleId!;
+        this.myUid    = user!.uid;
+        return this.coupleService.getCouple$(this.coupleId).pipe(take(1));
+      }),
       takeUntilDestroyed(this.destroyRef)
-    ).subscribe(user => {
-      this.coupleId = user!.coupleId!;
-      this.myUid = user!.uid;
+    ).subscribe(couple => {
+      this.couple.set(couple);
       this.coupleService.getNotes$(this.coupleId)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(n => this.notes.set(n));
     });
   }
 
-  isMyNote(note: Note): boolean {
-    return note.authorUid === this.myUid;
+  isMyNote(note: Note)  { return note.authorUid === this.myUid; }
+  authorName(note: Note) {
+    const c = this.couple();
+    if (!c) return '';
+    return note.authorUid === this.myUid ? 'Vos' : this.coupleService.getDisplayName(note.authorUid, c);
   }
 
   async addNote() {
