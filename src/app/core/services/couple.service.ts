@@ -167,9 +167,10 @@ export class CoupleService {
     });
   }
 
-  async addNote(coupleId: string, text: string): Promise<void> {
+  async addNote(coupleId: string, title: string, text: string): Promise<void> {
     const now = new Date();
     await addDoc(collection(this.firestore, `couples/${coupleId}/notes`), {
+      title,
       text,
       authorUid: this.auth.currentUserUid,
       createdAt: now,

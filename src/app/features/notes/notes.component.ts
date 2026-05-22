@@ -8,106 +8,249 @@ import { CoupleService } from '../../core/services/couple.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Couple, Note } from '../../core/models/couple.model';
 
+const CARD_COLORS = [
+  '#ffffff', '#fff9c4', '#fce4ec', '#f3e5f5',
+  '#e8f5e9', '#e3f2fd', '#fff3e0', '#fce4ec',
+];
+
 @Component({
   selector: 'app-notes',
   standalone: true,
   imports: [DatePipe, FormsModule, MatIconModule],
   template: `
     <div class="notes-page">
-      <div class="add-note-card">
-        <textarea
-          class="note-input"
-          [(ngModel)]="newNoteText"
-          placeholder="Escribe algo para los dos... 💕"
-          rows="3"
-        ></textarea>
-        <div class="add-note-footer">
-          <button class="send-btn" (click)="addNote()" [disabled]="!newNoteText.trim()">
-            <mat-icon>send</mat-icon>
-          </button>
-        </div>
-      </div>
 
-      <div class="notes-list">
-        @for (note of notes(); track note.id) {
-          <div class="note-card" [class.mine]="isMyNote(note)">
-            <button class="delete-btn" (click)="deleteNote(note)">×</button>
-            <span class="note-author">{{ authorName(note) }}</span>
-            <p class="note-text">{{ note.text }}</p>
-            <span class="note-time">{{ note.createdAt | date:'d MMM · HH:mm' }}</span>
+      <!-- Inline add-note panel (shows when FAB clicked) -->
+      @if (adding()) {
+        <div class="add-panel" (click)="$event.stopPropagation()">
+          <input
+            class="add-title"
+            [(ngModel)]="newTitle"
+            placeholder="Título"
+            (keydown.enter)="titleInput.focus()"
+          />
+          <textarea
+            #titleInput
+            class="add-body"
+            [(ngModel)]="newText"
+            placeholder="Escribe una nota..."
+            rows="4"
+            (keydown.escape)="cancelAdd()"
+          ></textarea>
+          <div class="add-actions">
+            <span class="add-author-hint">
+              <mat-icon>person</mat-icon> {{ myDisplayName() }}
+            </span>
+            <button class="close-btn" (click)="cancelAdd()">Cerrar</button>
+            <button class="save-btn" (click)="saveNote()" [disabled]="!newText.trim() && !newTitle.trim()">
+              Guardar
+            </button>
           </div>
-        } @empty {
-          <div class="empty-state">
-            <span>💌</span>
-            <p>Sin notas aún</p>
-            <span class="empty-sub">¡Escribe algo bonito para los dos!</span>
+        </div>
+      }
+
+      <!-- Empty state -->
+      @if (notes().length === 0 && !adding()) {
+        <div class="empty-state">
+          <mat-icon>sticky_note_2</mat-icon>
+          <p>Las notas que agreguen aparecerán aquí</p>
+        </div>
+      }
+
+      <!-- Keep-style grid -->
+      <div class="notes-grid">
+        @for (note of notes(); track note.id) {
+          <div class="note-card" [style.background]="cardColor(note)">
+            <button class="card-delete" (click)="deleteNote(note)" title="Eliminar">
+              <mat-icon>close</mat-icon>
+            </button>
+            @if (note.title) {
+              <p class="card-title">{{ note.title }}</p>
+            }
+            <p class="card-body">{{ note.text }}</p>
+            <div class="card-footer">
+              <span class="card-author" [class.mine]="isMyNote(note)">
+                {{ authorName(note) }}
+              </span>
+              <span class="card-date">{{ note.createdAt | date:'d MMM' }}</span>
+            </div>
           </div>
         }
       </div>
+
     </div>
+
+    <!-- FAB -->
+    <button class="fab" (click)="openAdd()" [class.active]="adding()">
+      <mat-icon>{{ adding() ? 'edit' : 'add' }}</mat-icon>
+    </button>
+
+    <!-- Backdrop to close panel -->
+    @if (adding()) {
+      <div class="backdrop" (click)="cancelAdd()"></div>
+    }
   `,
   styles: [`
-    .notes-page { padding: 1.2rem; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.2rem; }
-
-    .add-note-card {
-      background: white; border-radius: 18px; padding: 1rem 1rem 0.75rem;
-      box-shadow: 0 4px 20px rgba(194,24,91,0.1); border: 1.5px solid #fce4ec;
+    :host {
+      display: block;
+      position: relative;
+      min-height: 100%;
     }
-    .note-input {
-      width: 100%; border: none; outline: none; resize: none;
-      font-size: 0.95rem; line-height: 1.6; color: #333;
-      background: transparent; font-family: inherit; box-sizing: border-box;
+
+    .notes-page {
+      padding: 1rem;
+      max-width: 600px;
+      margin: 0 auto;
+      padding-bottom: 5rem;
+    }
+
+    /* ── Add panel ── */
+    .add-panel {
+      position: relative; z-index: 20;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(233,30,99,0.18);
+      border: 1.5px solid #fce4ec;
+      margin-bottom: 1.2rem;
+      overflow: hidden;
+      animation: slideDown 0.18s ease;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .add-title {
+      display: block; width: 100%;
+      padding: 0.85rem 1rem 0.4rem;
+      border: none; outline: none;
+      font-size: 1rem; font-weight: 600; color: #222;
+      background: transparent; font-family: inherit;
+      box-sizing: border-box;
+      &::placeholder { color: #bbb; font-weight: 400; }
+    }
+    .add-body {
+      display: block; width: 100%;
+      padding: 0.4rem 1rem 0.75rem;
+      border: none; outline: none; resize: none;
+      font-size: 0.92rem; color: #444; line-height: 1.6;
+      background: transparent; font-family: inherit;
+      box-sizing: border-box;
       &::placeholder { color: #ccc; }
     }
-    .add-note-footer {
-      display: flex; justify-content: flex-end;
-      padding-top: 0.5rem; border-top: 1px solid #fce4ec; margin-top: 0.5rem;
+    .add-actions {
+      display: flex; align-items: center;
+      padding: 0.5rem 0.75rem;
+      border-top: 1px solid #fce4ec;
+      gap: 0.5rem;
     }
-    .send-btn {
-      width: 40px; height: 40px; border-radius: 50%; border: none;
+    .add-author-hint {
+      flex: 1; display: flex; align-items: center; gap: 4px;
+      font-size: 0.75rem; color: #e91e63; font-weight: 600;
+      mat-icon { font-size: 0.9rem; height: 0.9rem; width: 0.9rem; }
+    }
+    .close-btn {
+      padding: 0.4rem 0.9rem; border-radius: 8px; border: none;
+      background: transparent; color: #888; font-size: 0.85rem;
+      cursor: pointer; font-family: inherit;
+      &:hover { background: #f5f5f5; }
+    }
+    .save-btn {
+      padding: 0.4rem 1rem; border-radius: 8px; border: none;
       background: linear-gradient(135deg, #e91e63, #9c27b0);
-      color: white; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: all 0.2s ease;
-      box-shadow: 0 3px 10px rgba(233,30,99,0.35);
-      mat-icon { font-size: 1.1rem; height: 1.1rem; width: 1.1rem; }
-      &:disabled { background: #eee; box-shadow: none; cursor: default; color: #bbb; }
-      &:not(:disabled):hover { transform: scale(1.08); }
+      color: white; font-size: 0.85rem; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+      &:disabled { background: #eee; color: #bbb; cursor: default; }
     }
 
-    .notes-list { display: flex; flex-direction: column; gap: 0.9rem; }
+    /* ── Grid ── */
+    .notes-grid {
+      columns: 2;
+      column-gap: 0.75rem;
+    }
+
     .note-card {
-      position: relative; background: white; border-radius: 16px;
-      padding: 0.8rem 2.5rem 0.8rem 1.2rem;
-      box-shadow: 0 3px 14px rgba(0,0,0,0.06);
-      border-left: 4px solid #f48fb1;
-      transition: transform 0.15s ease;
-      &:hover { transform: translateY(-1px); }
-      &.mine { border-left-color: #e91e63; background: linear-gradient(135deg, #fff, #fff9fb); }
+      break-inside: avoid;
+      border-radius: 14px;
+      border: 1.5px solid rgba(0,0,0,0.08);
+      padding: 0.85rem;
+      margin-bottom: 0.75rem;
+      position: relative;
+      cursor: default;
+      transition: box-shadow 0.18s ease, transform 0.18s ease;
+      &:hover {
+        box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+        transform: translateY(-2px);
+        .card-delete { opacity: 1; }
+      }
     }
-    .note-author {
-      display: block; font-size: 0.7rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;
+    .card-delete {
+      position: absolute; top: 6px; right: 6px;
+      width: 26px; height: 26px; border-radius: 50%;
+      border: none; background: transparent;
+      color: #aaa; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.15s, background 0.15s;
+      mat-icon { font-size: 0.95rem; height: 0.95rem; width: 0.95rem; }
+      &:hover { background: rgba(0,0,0,0.08); color: #555; }
     }
-    .mine .note-author { color: #e91e63; }
-    .note-card:not(.mine) .note-author { color: #9c27b0; }
-    .note-text { margin: 0 0 0.5rem; font-size: 0.95rem; line-height: 1.6; color: #333; white-space: pre-wrap; word-break: break-word; }
-    .note-time { font-size: 0.72rem; color: #bbb; }
-    .delete-btn {
-      position: absolute; top: 8px; right: 8px;
-      width: 26px; height: 26px; border-radius: 50%; border: none;
-      background: transparent; color: #ddd; font-size: 1.1rem;
-      line-height: 1; cursor: pointer; display: flex; align-items: center;
-      justify-content: center; transition: all 0.15s ease; padding: 0;
-      &:hover { background: #fce4ec; color: #e91e63; }
+    .card-title {
+      margin: 0 1.2rem 0.4rem 0;
+      font-size: 0.9rem; font-weight: 700; color: #222;
+      line-height: 1.4;
+      overflow: hidden; display: -webkit-box;
+      -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    .card-body {
+      margin: 0 0 0.6rem;
+      font-size: 0.82rem; color: #444; line-height: 1.55;
+      white-space: pre-wrap; word-break: break-word;
+      overflow: hidden; display: -webkit-box;
+      -webkit-line-clamp: 8; -webkit-box-orient: vertical;
+    }
+    .card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 0.4rem; margin-top: 0.2rem;
+    }
+    .card-author {
+      font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      color: #9c27b0;
+      &.mine { color: #e91e63; }
+    }
+    .card-date { font-size: 0.68rem; color: #bbb; }
+
+    /* ── Empty ── */
+    .empty-state {
+      text-align: center; padding: 4rem 1rem;
+      display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
+      mat-icon { font-size: 3rem; height: 3rem; width: 3rem; color: #e0b0c8; }
+      p { margin: 0; font-size: 0.9rem; color: #ccc; }
     }
 
-    .empty-state {
-      text-align: center; padding: 3rem 1rem;
-      display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
-      font-size: 3rem;
+    /* ── FAB ── */
+    .fab {
+      position: fixed;
+      bottom: calc(68px + 1.2rem);
+      right: 1.2rem;
+      width: 52px; height: 52px;
+      border-radius: 50%; border: none;
+      background: linear-gradient(135deg, #e91e63, #9c27b0);
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(233,30,99,0.45);
+      transition: transform 0.2s, box-shadow 0.2s;
+      z-index: 30;
+      mat-icon { font-size: 1.5rem; height: 1.5rem; width: 1.5rem; }
+      &:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(233,30,99,0.55); }
+      &.active { transform: rotate(45deg); }
     }
-    .empty-state p { margin: 0; font-size: 1rem; font-weight: 500; color: #aaa; }
-    .empty-sub { font-size: 0.85rem; color: #ccc; }
+
+    /* ── Backdrop ── */
+    .backdrop {
+      position: fixed; inset: 0; z-index: 10;
+      background: transparent;
+    }
   `],
 })
 export class NotesComponent implements OnInit {
@@ -115,9 +258,13 @@ export class NotesComponent implements OnInit {
   private authService  = inject(AuthService);
   private destroyRef   = inject(DestroyRef);
 
-  notes  = signal<Note[]>([]);
-  couple = signal<Couple | null>(null);
-  newNoteText = '';
+  notes         = signal<Note[]>([]);
+  couple        = signal<Couple | null>(null);
+  adding        = signal(false);
+  myDisplayName = signal('Vos');
+
+  newTitle = '';
+  newText  = '';
   private coupleId = '';
   private myUid    = '';
 
@@ -133,23 +280,39 @@ export class NotesComponent implements OnInit {
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(couple => {
       this.couple.set(couple);
+      const isUser1 = couple.user1Uid === this.myUid;
+      this.myDisplayName.set(isUser1 ? couple.user1DisplayName : (couple.user2DisplayName ?? 'Vos'));
       this.coupleService.getNotes$(this.coupleId)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(n => this.notes.set(n));
     });
   }
 
+  cardColor(note: Note): string {
+    const idx = parseInt(note.id.slice(-2), 16) % CARD_COLORS.length;
+    return CARD_COLORS[idx];
+  }
+
   isMyNote(note: Note)  { return note.authorUid === this.myUid; }
+
   authorName(note: Note) {
     const c = this.couple();
     if (!c) return '';
     return note.authorUid === this.myUid ? 'Vos' : this.coupleService.getDisplayName(note.authorUid, c);
   }
 
-  async addNote() {
-    if (!this.newNoteText.trim() || !this.coupleId) return;
-    await this.coupleService.addNote(this.coupleId, this.newNoteText.trim());
-    this.newNoteText = '';
+  openAdd() { this.adding.set(true); }
+
+  cancelAdd() {
+    this.adding.set(false);
+    this.newTitle = '';
+    this.newText  = '';
+  }
+
+  async saveNote() {
+    if (!this.newText.trim() && !this.newTitle.trim()) return;
+    await this.coupleService.addNote(this.coupleId, this.newTitle.trim(), this.newText.trim());
+    this.cancelAdd();
   }
 
   async deleteNote(note: Note) {

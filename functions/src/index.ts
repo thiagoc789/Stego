@@ -54,15 +54,17 @@ export const onNoteCreated = onDocumentCreated(
     if (!note) return;
 
     const name = await getCoupleName(event.params.coupleId);
-    const preview = note['text'].length > 60
-      ? note['text'].substring(0, 60) + '…'
-      : note['text'];
+    const title   = note['title'] ? `"${note['title']}"` : '';
+    const preview = note['text']?.length > 50
+      ? note['text'].substring(0, 50) + '…'
+      : (note['text'] ?? '');
+    const body = title ? `${title} · ${preview}` : `Nueva nota: "${preview}"`;
 
     await notifyPartner(
       event.params.coupleId,
       note['authorUid'],
       name,
-      `Nueva nota: "${preview}"`
+      body
     );
   }
 );
