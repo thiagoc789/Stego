@@ -27,6 +27,7 @@ export interface KnowledgeRound {
 
 export interface Note {
   id: string;
+  title: string;
   text: string;
   authorUid: string;
   createdAt: Date;
