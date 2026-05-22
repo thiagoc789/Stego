@@ -41,15 +41,17 @@ async function notifyPartner(coupleId, authorUid, title, body) {
 // ── Triggers ─────────────────────────────────────────────────────────────────
 // Notify when a note is created
 exports.onNoteCreated = (0, firestore_1.onDocumentCreated)('couples/{coupleId}/notes/{noteId}', async (event) => {
-    var _a;
+    var _a, _b, _c;
     const note = (_a = event.data) === null || _a === void 0 ? void 0 : _a.data();
     if (!note)
         return;
     const name = await getCoupleName(event.params.coupleId);
-    const preview = note['text'].length > 60
-        ? note['text'].substring(0, 60) + '…'
-        : note['text'];
-    await notifyPartner(event.params.coupleId, note['authorUid'], name, `Nueva nota: "${preview}"`);
+    const title = note['title'] ? `"${note['title']}"` : '';
+    const preview = ((_b = note['text']) === null || _b === void 0 ? void 0 : _b.length) > 50
+        ? note['text'].substring(0, 50) + '…'
+        : ((_c = note['text']) !== null && _c !== void 0 ? _c : '');
+    const body = title ? `${title} · ${preview}` : `Nueva nota: "${preview}"`;
+    await notifyPartner(event.params.coupleId, note['authorUid'], name, body);
 });
 // Notify when a reminder is created
 exports.onReminderCreated = (0, firestore_1.onDocumentCreated)('couples/{coupleId}/reminders/{reminderId}', async (event) => {
