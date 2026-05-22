@@ -30,6 +30,8 @@ export class PhotoService {
     coupleId: string,
     file: File,
     caption: string,
+    place: string,
+    memoryDate: string,
     onProgress: (pct: number) => void
   ): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -49,7 +51,9 @@ export class PhotoService {
               url,
               storagePath,
               uploaderUid: this.auth.currentUserUid!,
-              caption: caption.trim(),
+              caption,
+              place,
+              memoryDate,
               createdAt: new Date(),
             } satisfies Omit<Photo, 'id'>);
             resolve();

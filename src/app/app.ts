@@ -42,7 +42,7 @@ import { NotificationService } from './core/services/notification.service';
             </a>
             <a routerLink="/photos" routerLinkActive="active">
               <mat-icon>photo_library</mat-icon>
-              <span>Fotos</span>
+              <span>Recuerdos</span>
             </a>
             <a routerLink="/reminders" routerLinkActive="active">
               <mat-icon>checklist</mat-icon>

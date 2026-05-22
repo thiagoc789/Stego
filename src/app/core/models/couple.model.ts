@@ -48,5 +48,7 @@ export interface Photo {
   storagePath: string;
   uploaderUid: string;
   caption: string;
+  place: string;
+  memoryDate: string;
   createdAt: Date;
 }
