@@ -1,12 +1,13 @@
 export const environment = {
   production: false,
   firebase: {
-    apiKey: 'TU_API_KEY',
-    authDomain: 'TU_PROJECT.firebaseapp.com',
-    projectId: 'TU_PROJECT_ID',
-    storageBucket: 'TU_PROJECT.appspot.com',
-    messagingSenderId: 'TU_SENDER_ID',
-    appId: 'TU_APP_ID',
-    vapidKey: 'TU_VAPID_KEY',
+    apiKey: 'AIzaSyAZnk5qeNufOhnvvEyKRB077RKAHcCV5d8',
+    authDomain: 'stego-cd22b.firebaseapp.com',
+    projectId: 'stego-cd22b',
+    storageBucket: 'stego-cd22b.firebasestorage.app',
+    messagingSenderId: '862901970284',
+    appId: '1:862901970284:web:b9c2c0da5d3099236dbf49',
+    measurementId: 'G-N5GG4WXFQG',
+    vapidKey: 'BFliqa-PB-36ObMaZgUAjDlR-xQdm246nh1pe8GMOTkxb67thNDsK7QcpPuPzfkt8aN4f1i3uHlyzKXjVQejDic',
   },
 };

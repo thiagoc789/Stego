@@ -13,50 +13,88 @@ import { CoupleService } from '../../core/services/couple.service';
   imports: [FormsModule, MatButtonModule, MatInputModule, MatFormFieldModule, MatSnackBarModule],
   template: `
     <div class="link-container">
-      <h2>Conectemos</h2>
+      <div class="logo">
+        <span class="heart">♡</span>
+        <h1>Nosotros</h1>
+        <p>El espacio de los dos</p>
+      </div>
 
-      <div class="option">
-        <p>Crea el espacio y comparte el código con tu pareja</p>
-        <button mat-raised-button color="primary" (click)="create()" [disabled]="loading()">
-          Crear espacio y obtener código
-        </button>
-        @if (generatedCode()) {
+      @if (!generatedCode()) {
+        <div class="option">
+          <h3>Crear espacio</h3>
+          <p class="hint-text">Dale un nombre a su espacio y comparte el código con tu pareja</p>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Nombre del espacio</mat-label>
+            <input matInput [(ngModel)]="spaceName" maxlength="30" placeholder="Ej: Ana & Luis 💕" />
+          </mat-form-field>
+          <button mat-raised-button color="primary" (click)="create()"
+                  [disabled]="loading() || !spaceName.trim()">
+            Crear y obtener código
+          </button>
+        </div>
+
+        <div class="divider">— o —</div>
+
+        <div class="option">
+          <h3>Unirme</h3>
+          <p class="hint-text">¿Tu pareja ya creó el espacio? Ingresa el código</p>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Código de 6 caracteres</mat-label>
+            <input matInput [(ngModel)]="inputCode" maxlength="6" placeholder="ABC123"
+                   (input)="inputCode = inputCode.toUpperCase()" />
+          </mat-form-field>
+          <button mat-raised-button color="accent" (click)="join()"
+                  [disabled]="loading() || inputCode.length < 6">
+            Unirme
+          </button>
+        </div>
+      } @else {
+        <div class="code-section">
+          <div class="check-icon">✓</div>
+          <h3>¡Espacio creado!</h3>
+          <p>Comparte este código con tu pareja:</p>
           <div class="code-box">
-            <p>Tu código:</p>
             <strong>{{ generatedCode() }}</strong>
-            <p class="hint">Compártelo con tu pareja</p>
           </div>
-        }
-      </div>
-
-      <div class="divider">— o —</div>
-
-      <div class="option">
-        <p>¿Tu pareja ya creó el espacio? Ingresa el código</p>
-        <mat-form-field appearance="outline">
-          <mat-label>Código de 6 caracteres</mat-label>
-          <input matInput [(ngModel)]="inputCode" maxlength="6" placeholder="ABC123" />
-        </mat-form-field>
-        <button mat-raised-button color="accent" (click)="join()" [disabled]="loading() || inputCode.length < 6">
-          Unirme
-        </button>
-      </div>
+          <p class="hint-text">Tu pareja lo ingresa en la pantalla "Unirme"</p>
+          <button mat-raised-button color="primary" (click)="continue()">
+            Ir a la app →
+          </button>
+        </div>
+      }
     </div>
   `,
   styles: [`
     .link-container {
-      padding: 2rem;
+      min-height: 100vh;
+      padding: 2rem 1.5rem;
       max-width: 400px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
     }
+    .logo { text-align: center; }
+    .logo .heart { font-size: 3rem; }
+    .logo h1 { margin: 0; font-size: 2rem; }
+    .logo p { margin: 0; color: #888; }
     .option { display: flex; flex-direction: column; gap: 0.75rem; }
-    .code-box { text-align: center; background: #fce4ec; padding: 1rem; border-radius: 8px; }
-    .code-box strong { font-size: 2rem; letter-spacing: 4px; }
-    .hint { font-size: 0.8rem; color: #888; margin: 0; }
-    .divider { text-align: center; color: #aaa; }
+    .option h3 { margin: 0; color: #e91e63; }
+    .hint-text { margin: 0; font-size: 0.85rem; color: #777; }
+    .full-width { width: 100%; }
+    .divider { text-align: center; color: #ccc; font-size: 0.9rem; }
+    .code-section {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 1rem; text-align: center; padding-top: 1rem;
+    }
+    .check-icon { font-size: 3rem; color: #4caf50; }
+    .code-section h3 { margin: 0; font-size: 1.4rem; }
+    .code-box {
+      background: linear-gradient(135deg, #fce4ec, #f8bbd0);
+      padding: 1.2rem 2rem;
+      border-radius: 12px;
+      strong { font-size: 2.2rem; letter-spacing: 6px; color: #c2185b; }
+    }
   `],
 })
 export class LinkCoupleComponent {
@@ -66,13 +104,19 @@ export class LinkCoupleComponent {
 
   loading = signal(false);
   generatedCode = signal('');
+  spaceName = '';
   inputCode = '';
 
   async create() {
+    if (!this.spaceName.trim()) return;
     this.loading.set(true);
-    const code = await this.coupleService.createCouple();
+    const code = await this.coupleService.createCouple(this.spaceName.trim());
     this.generatedCode.set(code);
     this.loading.set(false);
+  }
+
+  continue() {
+    this.router.navigate(['/daily']);
   }
 
   async join() {
@@ -81,7 +125,7 @@ export class LinkCoupleComponent {
     this.loading.set(false);
 
     if (ok) {
-      this.router.navigate(['/']);
+      this.router.navigate(['/daily']);
     } else {
       this.snackBar.open('Código inválido o ya usado', 'Ok', { duration: 3000 });
     }

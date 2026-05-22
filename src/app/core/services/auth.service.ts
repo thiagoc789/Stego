@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Auth, GoogleAuthProvider, signInWithPopup, signOut, user } from '@angular/fire/auth';
-import { Firestore, doc, setDoc, getDoc } from '@angular/fire/firestore';
+import { Firestore, doc, setDoc, getDoc, onSnapshot } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
 import { Observable, from, switchMap, of } from 'rxjs';
 import { AppUser } from '../models/user.model';
@@ -11,17 +11,26 @@ export class AuthService {
   private firestore = inject(Firestore);
   private router = inject(Router);
 
+  // Uses onSnapshot so currentUser$ updates reactively when coupleId changes in Firestore
   readonly currentUser$: Observable<AppUser | null> = user(this.auth).pipe(
     switchMap(firebaseUser => {
       if (!firebaseUser) return of(null);
-      return from(this.getOrCreateUser(firebaseUser));
+      return from(this.ensureUser(firebaseUser)).pipe(
+        switchMap(() =>
+          new Observable<AppUser | null>(observer => {
+            const ref = doc(this.firestore, `users/${firebaseUser.uid}`);
+            return onSnapshot(ref, snap => {
+              observer.next(snap.exists() ? (snap.data() as AppUser) : null);
+            });
+          })
+        )
+      );
     })
   );
 
   async loginWithGoogle(): Promise<void> {
     const provider = new GoogleAuthProvider();
-    const credential = await signInWithPopup(this.auth, provider);
-    await this.getOrCreateUser(credential.user);
+    await signInWithPopup(this.auth, provider);
     this.router.navigate(['/']);
   }
 
@@ -34,23 +43,17 @@ export class AuthService {
     return this.auth.currentUser?.uid ?? null;
   }
 
-  private async getOrCreateUser(firebaseUser: any): Promise<AppUser> {
+  private async ensureUser(firebaseUser: any): Promise<void> {
     const ref = doc(this.firestore, `users/${firebaseUser.uid}`);
     const snap = await getDoc(ref);
-
-    if (snap.exists()) {
-      return snap.data() as AppUser;
+    if (!snap.exists()) {
+      await setDoc(ref, {
+        uid: firebaseUser.uid,
+        displayName: firebaseUser.displayName ?? 'Sin nombre',
+        email: firebaseUser.email ?? '',
+        coupleId: null,
+        fcmToken: null,
+      } satisfies AppUser);
     }
-
-    const newUser: AppUser = {
-      uid: firebaseUser.uid,
-      displayName: firebaseUser.displayName ?? 'Sin nombre',
-      email: firebaseUser.email ?? '',
-      coupleId: null,
-      fcmToken: null,
-    };
-
-    await setDoc(ref, newUser);
-    return newUser;
   }
 }

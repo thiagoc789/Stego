@@ -1,4 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,8 +8,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { CoupleService } from '../../core/services/couple.service';
+import { AuthService } from '../../core/services/auth.service';
 import { Note } from '../../core/models/couple.model';
-import { Observable, of } from 'rxjs';
+import { filter, take } from 'rxjs';
 
 @Component({
   selector: 'app-notes',
@@ -59,14 +61,24 @@ import { Observable, of } from 'rxjs';
 })
 export class NotesComponent implements OnInit {
   private coupleService = inject(CoupleService);
+  private authService = inject(AuthService);
+  private destroyRef = inject(DestroyRef);
 
   notes = signal<Note[]>([]);
   newNoteText = '';
-  private coupleId = ''; // will come from user state
+  private coupleId = '';
 
   ngOnInit() {
-    if (!this.coupleId) return;
-    this.coupleService.getNotes$(this.coupleId).subscribe(n => this.notes.set(n));
+    this.authService.currentUser$.pipe(
+      filter(u => !!u?.coupleId),
+      take(1),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(user => {
+      this.coupleId = user!.coupleId!;
+      this.coupleService.getNotes$(this.coupleId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(n => this.notes.set(n));
+    });
   }
 
   async addNote() {
