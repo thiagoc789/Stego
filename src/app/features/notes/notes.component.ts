@@ -9,8 +9,14 @@ import { AuthService } from '../../core/services/auth.service';
 import { Couple, Note } from '../../core/models/couple.model';
 
 const CARD_COLORS = [
-  '#ffffff', '#fff9c4', '#fce4ec', '#f3e5f5',
-  '#e8f5e9', '#e3f2fd', '#fff3e0', '#fdf6ff',
+  '#f8bbd0', // rosa
+  '#e1bee7', // violeta
+  '#fff59d', // amarillo
+  '#b2ebf2', // celeste
+  '#c8e6c9', // verde
+  '#ffcc80', // naranja
+  '#f48fb1', // rosa fuerte
+  '#ce93d8', // lila
 ];
 
 @Component({
@@ -210,8 +216,8 @@ const CARD_COLORS = [
     /* ── Note card ── */
     .note-card {
       break-inside: avoid; border-radius: 14px;
-      border: 1px solid rgba(0,0,0,0.12);
-      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+      border: 1.5px solid rgba(0,0,0,0.10);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
       padding: 0.8rem 0.8rem 0.6rem;
       margin-bottom: 0.7rem;
       cursor: pointer;
@@ -279,9 +285,9 @@ const CARD_COLORS = [
     /* ── Modal ── */
     .modal-backdrop {
       position: fixed; inset: 0; z-index: 100;
-      background: rgba(80,0,40,0.25);
-      backdrop-filter: blur(12px) saturate(1.2);
-      -webkit-backdrop-filter: blur(12px) saturate(1.2);
+      background: rgba(120,0,60,0.35);
+      backdrop-filter: blur(16px) saturate(1.6) brightness(0.85);
+      -webkit-backdrop-filter: blur(16px) saturate(1.6) brightness(0.85);
       display: flex; align-items: center; justify-content: center;
       padding: 1.5rem;
       animation: fadeIn 0.18s ease;
