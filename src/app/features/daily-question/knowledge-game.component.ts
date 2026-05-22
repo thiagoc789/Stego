@@ -55,8 +55,10 @@ import { KnowledgeRound } from '../../core/models/couple.model';
               <span class="waiting-dot">⌛</span>
             }
           </div>
-          @if (partnerOwnAnswer() && !isCorrect()) {
-            <p class="guess-detail">Vos dijiste: {{ myGuess() }}</p>
+          @if (partnerOwnAnswer()) {
+            <p class="guess-detail" [class.guess-correct]="isCorrect()">
+              Vos dijiste: {{ myGuess() }}
+            </p>
           }
           <div class="divider"></div>
           <div class="result-row">
@@ -72,8 +74,10 @@ import { KnowledgeRound } from '../../core/models/couple.model';
               <span class="waiting-dot">⌛</span>
             }
           </div>
-          @if (partnerGuess() && !partnerCorrect()) {
-            <p class="guess-detail">{{ partnerName() }} dijo: {{ partnerGuess() }}</p>
+          @if (partnerGuess()) {
+            <p class="guess-detail" [class.guess-correct]="partnerCorrect()">
+              {{ partnerName() }} dijo: {{ partnerGuess() }}
+            </p>
           }
           @if (isCorrect() && partnerCorrect()) {
             <div class="both-correct">🎉 ¡Se conocen muy bien!</div>
@@ -136,6 +140,7 @@ import { KnowledgeRound } from '../../core/models/couple.model';
     }
     .waiting-dot { font-size: 1.1rem; }
     .guess-detail { margin: 0; font-size: 0.78rem; color: #aaa; }
+    .guess-detail.guess-correct { color: #66bb6a; }
     .divider { height: 1px; background: #f5f5f5; }
     .both-correct {
       text-align: center; font-size: 0.95rem; font-weight: 600;
