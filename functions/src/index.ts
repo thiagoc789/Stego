@@ -116,3 +116,84 @@ export const onAnswerWritten = onDocumentWritten(
     );
   }
 );
+
+// Notify when a photo is uploaded
+export const onPhotoCreated = onDocumentCreated(
+  'couples/{coupleId}/photos/{photoId}',
+  async event => {
+    const photo = event.data?.data();
+    if (!photo) return;
+
+    const name = await getCoupleName(event.params.coupleId);
+    const parts: string[] = [];
+    if (photo['place']) parts.push(photo['place']);
+    if (photo['memoryDate']) parts.push(photo['memoryDate']);
+    const detail = parts.length ? ` · ${parts.join(', ')}` : '';
+
+    await notifyPartner(
+      event.params.coupleId,
+      photo['uploaderUid'],
+      name,
+      `📸 Nuevo recuerdo${detail}`
+    );
+  }
+);
+
+// Notify when a reminder is marked as done
+export const onReminderDone = onDocumentWritten(
+  'couples/{coupleId}/reminders/{reminderId}',
+  async event => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    if (!after) return;
+
+    const justCompleted = !before?.['done'] && after['done'] === true;
+    if (!justCompleted) return;
+
+    const coupleSnap = await db.doc(`couples/${event.params.coupleId}`).get();
+    const couple = coupleSnap.data();
+    if (!couple) return;
+
+    // Find who completed it — could be either user, use createdByUid as fallback
+    const name = couple['name'] ?? 'Nosotros';
+    await notifyPartner(
+      event.params.coupleId,
+      after['createdByUid'],
+      name,
+      `✅ Tarea completada: "${after['title']}"`
+    );
+  }
+);
+
+// Notify when a knowledge round answer or guess is saved
+export const onKnowledgeWritten = onDocumentWritten(
+  'couples/{coupleId}/knowledgeRounds/{date}',
+  async event => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    if (!after) return;
+
+    const coupleSnap = await db.doc(`couples/${event.params.coupleId}`).get();
+    const couple = coupleSnap.data();
+    if (!couple) return;
+
+    const name = couple['name'] ?? 'Nosotros';
+
+    const u1AnsweredNow  = !before?.['user1OwnAnswer'] && after['user1OwnAnswer'];
+    const u1GuessedNow   = !before?.['user1Guess']     && after['user1Guess'];
+    const u2AnsweredNow  = !before?.['user2OwnAnswer'] && after['user2OwnAnswer'];
+    const u2GuessedNow   = !before?.['user2Guess']     && after['user2Guess'];
+
+    if (u1AnsweredNow || u1GuessedNow) {
+      await notifyPartner(event.params.coupleId, couple['user1Uid'], name,
+        u1AnsweredNow
+          ? '🧠 Tu pareja respondió el juego de hoy'
+          : '🧠 Tu pareja adivinó tu respuesta');
+    } else if (u2AnsweredNow || u2GuessedNow) {
+      await notifyPartner(event.params.coupleId, couple['user2Uid'], name,
+        u2AnsweredNow
+          ? '🧠 Tu pareja respondió el juego de hoy'
+          : '🧠 Tu pareja adivinó tu respuesta');
+    }
+  }
+);
