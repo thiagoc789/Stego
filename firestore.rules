@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Each user can only read/write their own document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Invite codes: any authenticated user can read to join; write done by authenticated users
+    match /meta/inviteCodes {
+      allow read, write: if request.auth != null;
+    }
+
+    // Couple and all sub-collections: only the two members can access
+    match /couples/{coupleId} {
+      function isMember() {
+        return request.auth != null &&
+          (resource.data.user1Uid == request.auth.uid ||
+           resource.data.user2Uid == request.auth.uid);
+      }
+
+      function isMemberOfNew() {
+        return request.auth != null &&
+          request.resource.data.user1Uid == request.auth.uid;
+      }
+
+      allow read: if isMember();
+      allow create: if isMemberOfNew();
+      // Allow joining (user2Uid null → set) or member updating
+      allow update: if request.auth != null &&
+        (resource.data.user1Uid == request.auth.uid ||
+         resource.data.user2Uid == request.auth.uid ||
+         resource.data.user2Uid == null);
+
+      match /dailyAnswers/{date} {
+        allow read, write: if request.auth != null &&
+          (get(/databases/$(database)/documents/couples/$(coupleId)).data.user1Uid == request.auth.uid ||
+           get(/databases/$(database)/documents/couples/$(coupleId)).data.user2Uid == request.auth.uid);
+      }
+
+      match /notes/{noteId} {
+        allow read, write: if request.auth != null &&
+          (get(/databases/$(database)/documents/couples/$(coupleId)).data.user1Uid == request.auth.uid ||
+           get(/databases/$(database)/documents/couples/$(coupleId)).data.user2Uid == request.auth.uid);
+      }
+
+      match /reminders/{reminderId} {
+        allow read, write: if request.auth != null &&
+          (get(/databases/$(database)/documents/couples/$(coupleId)).data.user1Uid == request.auth.uid ||
+           get(/databases/$(database)/documents/couples/$(coupleId)).data.user2Uid == request.auth.uid);
+      }
+    }
+  }
+}

@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { AsyncPipe } from '@angular/common';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
@@ -7,13 +7,12 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { CoupleService } from '../../core/services/couple.service';
 import { AuthService } from '../../core/services/auth.service';
-import { DailyAnswer } from '../../core/models/couple.model';
-import { Observable, of } from 'rxjs';
+import { filter, take, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-daily-question',
   standalone: true,
-  imports: [AsyncPipe, FormsModule, MatButtonModule, MatInputModule, MatFormFieldModule, MatCardModule],
+  imports: [FormsModule, MatButtonModule, MatInputModule, MatFormFieldModule, MatCardModule],
   template: `
     <div class="daily-container">
       <h2>Pregunta del día</h2>
@@ -23,25 +22,23 @@ import { Observable, of } from 'rxjs';
         </mat-card-content>
       </mat-card>
 
-      @if (answers$ | async; as answers) {
-        <div class="answers">
-          @if (myAnswer()) {
-            <mat-card class="answer-card mine">
-              <mat-card-header><mat-card-title>Tu respuesta</mat-card-title></mat-card-header>
-              <mat-card-content><p>{{ myAnswer() }}</p></mat-card-content>
-            </mat-card>
-          }
+      <div class="answers">
+        @if (myAnswer()) {
+          <mat-card class="answer-card mine">
+            <mat-card-header><mat-card-title>Tu respuesta</mat-card-title></mat-card-header>
+            <mat-card-content><p>{{ myAnswer() }}</p></mat-card-content>
+          </mat-card>
+        }
 
-          @if (partnerAnswer()) {
-            <mat-card class="answer-card partner">
-              <mat-card-header><mat-card-title>Su respuesta ♡</mat-card-title></mat-card-header>
-              <mat-card-content><p>{{ partnerAnswer() }}</p></mat-card-content>
-            </mat-card>
-          } @else {
-            <p class="waiting">Esperando la respuesta de tu pareja...</p>
-          }
-        </div>
-      }
+        @if (partnerAnswer()) {
+          <mat-card class="answer-card partner">
+            <mat-card-header><mat-card-title>Su respuesta ♡</mat-card-title></mat-card-header>
+            <mat-card-content><p>{{ partnerAnswer() }}</p></mat-card-content>
+          </mat-card>
+        } @else if (myAnswer()) {
+          <p class="waiting">Esperando la respuesta de tu pareja...</p>
+        }
+      </div>
 
       @if (!myAnswer()) {
         <div class="input-section">
@@ -71,27 +68,43 @@ import { Observable, of } from 'rxjs';
 export class DailyQuestionComponent implements OnInit {
   private coupleService = inject(CoupleService);
   private authService = inject(AuthService);
+  private destroyRef = inject(DestroyRef);
 
   question = '';
   answerText = '';
   myAnswer = signal<string | null>(null);
   partnerAnswer = signal<string | null>(null);
-  answers$: Observable<DailyAnswer | null> = of(null);
 
-  // TODO: get coupleId and isUser1 from user state
   private coupleId = '';
+  private uid = '';
   private isUser1 = true;
 
   ngOnInit() {
     this.question = this.coupleService.getTodayQuestion();
-    // Will wire up coupleId from AuthService/CoupleService once user state is loaded
+
+    this.authService.currentUser$.pipe(
+      filter(u => !!u?.coupleId),
+      take(1),
+      switchMap(user => {
+        this.coupleId = user!.coupleId!;
+        this.uid = user!.uid;
+        return this.coupleService.getCouple$(this.coupleId).pipe(take(1));
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(couple => {
+      this.isUser1 = couple.user1Uid === this.uid;
+      this.coupleService.getTodayAnswers$(this.coupleId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(answers => {
+          this.myAnswer.set(answers ? (this.isUser1 ? answers.answerUser1 : answers.answerUser2) : null);
+          this.partnerAnswer.set(answers ? (this.isUser1 ? answers.answerUser2 : answers.answerUser1) : null);
+        });
+    });
   }
 
   async submitAnswer() {
     if (!this.answerText.trim() || !this.coupleId) return;
-    const uid = this.authService.currentUserUid!;
-    await this.coupleService.saveAnswer(this.coupleId, uid, this.answerText.trim(), this.isUser1);
-    this.myAnswer.set(this.answerText.trim());
+    await this.coupleService.saveAnswer(this.coupleId, this.uid, this.answerText.trim(), this.isUser1);
     this.answerText = '';
   }
 }

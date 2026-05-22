@@ -1,4 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,7 +9,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatCardModule } from '@angular/material/card';
 import { CoupleService } from '../../core/services/couple.service';
+import { AuthService } from '../../core/services/auth.service';
 import { Reminder } from '../../core/models/couple.model';
+import { filter, take } from 'rxjs';
 
 @Component({
   selector: 'app-reminders',
@@ -67,15 +70,25 @@ import { Reminder } from '../../core/models/couple.model';
 })
 export class RemindersComponent implements OnInit {
   private coupleService = inject(CoupleService);
+  private authService = inject(AuthService);
+  private destroyRef = inject(DestroyRef);
 
   reminders = signal<Reminder[]>([]);
   newTitle = '';
   newDatetime = '';
-  private coupleId = ''; // will come from user state
+  private coupleId = '';
 
   ngOnInit() {
-    if (!this.coupleId) return;
-    this.coupleService.getReminders$(this.coupleId).subscribe(r => this.reminders.set(r));
+    this.authService.currentUser$.pipe(
+      filter(u => !!u?.coupleId),
+      take(1),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(user => {
+      this.coupleId = user!.coupleId!;
+      this.coupleService.getReminders$(this.coupleId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(r => this.reminders.set(r));
+    });
   }
 
   async addReminder() {

@@ -26,15 +26,13 @@ export class CoupleService {
 
     await setDoc(coupleRef, couple);
     await updateDoc(doc(this.firestore, `users/${uid}`), { coupleId: coupleRef.id });
+    // Register invite code for fast lookup when partner joins
+    await setDoc(doc(this.firestore, 'meta/inviteCodes'), { [inviteCode]: coupleRef.id }, { merge: true });
     return inviteCode;
   }
 
   async joinCouple(code: string): Promise<boolean> {
     const uid = this.auth.currentUserUid!;
-    const couplesRef = collection(this.firestore, 'couples');
-    // Search by invite code — small dataset so we read all and filter
-    const snap = await getDoc(doc(this.firestore, 'meta/inviteCodes'));
-    // Simple approach: store code→coupleId map in meta/inviteCodes
     const codesDoc = await getDoc(doc(this.firestore, 'meta/inviteCodes'));
     const codes = codesDoc.exists() ? (codesDoc.data() as Record<string, string>) : {};
     const coupleId = codes[code.toUpperCase()];
@@ -46,12 +44,23 @@ export class CoupleService {
     if (!coupleSnap.exists()) return false;
 
     const couple = coupleSnap.data() as Couple;
-    if (couple.user2Uid && couple.user2Uid !== uid) return false; // already taken
-    if (couple.user1Uid === uid) return false; // same user
+    if (couple.user2Uid && couple.user2Uid !== uid) return false;
+    if (couple.user1Uid === uid) return false;
 
     await updateDoc(coupleRef, { user2Uid: uid });
     await updateDoc(doc(this.firestore, `users/${uid}`), { coupleId });
     return true;
+  }
+
+  // ── Couple ───────────────────────────────────────────────────────────
+
+  getCouple$(coupleId: string): Observable<Couple> {
+    return new Observable(observer => {
+      const ref = doc(this.firestore, `couples/${coupleId}`);
+      return onSnapshot(ref, snap => {
+        if (snap.exists()) observer.next({ id: snap.id, ...snap.data() } as Couple);
+      });
+    });
   }
 
   // ── Daily Question ───────────────────────────────────────────────────
