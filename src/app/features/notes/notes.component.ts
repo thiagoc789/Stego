@@ -390,9 +390,10 @@ export class NotesComponent implements OnInit {
   }
 
   cardColor(note: Note | null): string {
-    if (!note) return '#ffffff';
-    const idx = parseInt(note.id.slice(-2), 16) % CARD_COLORS.length;
-    return CARD_COLORS[idx];
+    if (!note) return CARD_COLORS[0];
+    let hash = 0;
+    for (const ch of note.id) hash = (hash * 31 + ch.charCodeAt(0)) | 0;
+    return CARD_COLORS[Math.abs(hash) % CARD_COLORS.length];
   }
 
   isMyNote(note: Note)  { return note.authorUid === this.myUid; }
