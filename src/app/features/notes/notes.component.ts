@@ -279,10 +279,12 @@ const CARD_COLORS = [
     /* ── Modal ── */
     .modal-backdrop {
       position: fixed; inset: 0; z-index: 100;
-      background: rgba(0,0,0,0.52);
+      background: rgba(80,0,40,0.25);
+      backdrop-filter: blur(12px) saturate(1.2);
+      -webkit-backdrop-filter: blur(12px) saturate(1.2);
       display: flex; align-items: center; justify-content: center;
       padding: 1.5rem;
-      animation: fadeIn 0.15s ease;
+      animation: fadeIn 0.18s ease;
     }
     @keyframes fadeIn {
       from { opacity: 0; } to { opacity: 1; }
