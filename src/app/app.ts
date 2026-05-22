@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AsyncPipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -25,6 +25,11 @@ import { APP_VERSION } from './version';
             </div>
             <div class="header-right">
               <span class="version-tag">v{{ version }}</span>
+              @if (showNotifBtn()) {
+                <button mat-icon-button class="notif-btn" (click)="enableNotifications()" aria-label="Activar notificaciones">
+                  <mat-icon>notifications_off</mat-icon>
+                </button>
+              }
               <button mat-icon-button class="logout-btn" (click)="auth.logout()" aria-label="Cerrar sesión">
                 <mat-icon>logout</mat-icon>
               </button>
@@ -98,6 +103,7 @@ import { APP_VERSION } from './version';
       font-size: 0.6rem; color: rgba(255,255,255,0.45);
       font-weight: 500; letter-spacing: 0.3px;
     }
+    .notif-btn { color: rgba(255,255,255,0.7); }
     .logout-btn { color: rgba(255,255,255,0.8); }
 
     .content { flex: 1; overflow-y: auto; padding-bottom: 80px; }
@@ -131,9 +137,12 @@ import { APP_VERSION } from './version';
 export class App implements OnInit {
   auth = inject(AuthService);
   readonly version = APP_VERSION;
-  private coupleService = inject(CoupleService);
   private notificationService = inject(NotificationService);
+  private coupleService = inject(CoupleService);
   private destroyRef = inject(DestroyRef);
+
+  showNotifBtn = signal(false);
+  private currentUid: string | null = null;
 
   couple$ = this.auth.currentUser$.pipe(
     switchMap(user =>
@@ -147,8 +156,32 @@ export class App implements OnInit {
       take(1),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(user => {
-      this.notificationService.requestPermission(user!.uid);
+      this.currentUid = user!.uid;
       this.notificationService.listenForeground();
+
+      // On non-iOS or if already granted, request automatically
+      if (!this.isIos()) {
+        this.notificationService.requestPermission(user!.uid);
+      } else {
+        // On iOS PWA: only show the bell button if not yet granted
+        this.showNotifBtn.set(
+          'Notification' in window && Notification.permission !== 'granted'
+        );
+      }
     });
+  }
+
+  async enableNotifications() {
+    if (!this.currentUid) return;
+    await this.notificationService.requestPermission(this.currentUid);
+    // Hide button once granted (or after they respond)
+    this.showNotifBtn.set(
+      'Notification' in window && Notification.permission !== 'granted'
+    );
+  }
+
+  private isIos(): boolean {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   }
 }
