@@ -25,7 +25,9 @@ service cloud.firestore {
           request.resource.data.user1Uid == request.auth.uid;
       }
 
-      allow read: if isMember();
+      // Also allow read when space is not yet joined (needed to validate invite code)
+      allow read: if isMember() ||
+        (request.auth != null && resource.data.user2Uid == null);
       allow create: if isMemberOfNew();
       // Allow joining (user2Uid null → set) or member updating
       allow update: if request.auth != null &&
