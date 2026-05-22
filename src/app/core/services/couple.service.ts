@@ -12,12 +12,13 @@ export class CoupleService {
 
   // ── Linking ──────────────────────────────────────────────────────────
 
-  async createCouple(): Promise<string> {
+  async createCouple(name: string): Promise<string> {
     const uid = this.auth.currentUserUid!;
     const inviteCode = this.generateCode();
     const coupleRef = doc(collection(this.firestore, 'couples'));
 
     const couple: Omit<Couple, 'id'> = {
+      name,
       inviteCode,
       user1Uid: uid,
       user2Uid: null,

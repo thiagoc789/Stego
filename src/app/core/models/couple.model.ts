@@ -1,5 +1,6 @@
 export interface Couple {
   id: string;
+  name: string;
   inviteCode: string;
   user1Uid: string;
   user2Uid: string | null;
