@@ -6,57 +6,195 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatCardModule } from '@angular/material/card';
+import { filter, take } from 'rxjs';
 import { CoupleService } from '../../core/services/couple.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Note } from '../../core/models/couple.model';
-import { filter, take } from 'rxjs';
 
 @Component({
   selector: 'app-notes',
   standalone: true,
-  imports: [DatePipe, FormsModule, MatButtonModule, MatIconModule, MatInputModule, MatFormFieldModule, MatCardModule],
+  imports: [DatePipe, FormsModule, MatButtonModule, MatIconModule, MatInputModule, MatFormFieldModule],
   template: `
-    <div class="notes-container">
-      <h2>Notas</h2>
+    <div class="notes-page">
 
-      <div class="add-note">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Nueva nota</mat-label>
-          <textarea matInput [(ngModel)]="newNoteText" rows="2" placeholder="Escribe algo para los dos..."></textarea>
-        </mat-form-field>
-        <button mat-raised-button color="primary" (click)="addNote()" [disabled]="!newNoteText.trim()">
-          <mat-icon>add</mat-icon> Agregar
-        </button>
+      <!-- Add note -->
+      <div class="add-note-card">
+        <textarea
+          class="note-input"
+          [(ngModel)]="newNoteText"
+          placeholder="Escribe algo para los dos... 💕"
+          rows="3"
+        ></textarea>
+        <div class="add-note-footer">
+          <button
+            class="send-btn"
+            (click)="addNote()"
+            [disabled]="!newNoteText.trim()"
+          >
+            <mat-icon>send</mat-icon>
+          </button>
+        </div>
       </div>
 
+      <!-- Notes list -->
       <div class="notes-list">
         @for (note of notes(); track note.id) {
-          <mat-card class="note-card">
-            <mat-card-content>
-              <p class="note-text">{{ note.text }}</p>
-              <div class="note-meta">
-                <span>{{ note.createdAt | date:'d MMM, HH:mm' }}</span>
-                <button mat-icon-button color="warn" (click)="deleteNote(note)">
-                  <mat-icon>delete_outline</mat-icon>
-                </button>
-              </div>
-            </mat-card-content>
-          </mat-card>
+          <div class="note-card" [class.mine]="isMyNote(note)">
+            <button class="delete-btn" (click)="deleteNote(note)" aria-label="Eliminar">
+              ×
+            </button>
+            <p class="note-text">{{ note.text }}</p>
+            <span class="note-time">{{ note.createdAt | date:'d MMM · HH:mm' }}</span>
+          </div>
         } @empty {
-          <p class="empty">Sin notas aún. ¡Escribe algo!</p>
+          <div class="empty-state">
+            <span class="empty-heart">💌</span>
+            <p>Sin notas aún</p>
+            <span>¡Escribe algo bonito para los dos!</span>
+          </div>
         }
       </div>
+
     </div>
   `,
   styles: [`
-    .notes-container { padding: 1.5rem; max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; }
-    .add-note { display: flex; flex-direction: column; gap: 0.75rem; }
-    .full-width { width: 100%; }
-    .notes-list { display: flex; flex-direction: column; gap: 1rem; }
-    .note-text { font-size: 1rem; white-space: pre-wrap; }
-    .note-meta { display: flex; justify-content: space-between; align-items: center; color: #aaa; font-size: 0.8rem; }
-    .empty { text-align: center; color: #aaa; font-style: italic; }
+    .notes-page {
+      padding: 1.2rem;
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    /* ── Add note card ── */
+    .add-note-card {
+      background: white;
+      border-radius: 18px;
+      padding: 1rem 1rem 0.75rem;
+      box-shadow: 0 4px 20px rgba(194, 24, 91, 0.1);
+      border: 1.5px solid #fce4ec;
+    }
+    .note-input {
+      width: 100%;
+      border: none;
+      outline: none;
+      resize: none;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #333;
+      background: transparent;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+    .note-input::placeholder { color: #ccc; }
+    .add-note-footer {
+      display: flex;
+      justify-content: flex-end;
+      padding-top: 0.5rem;
+      border-top: 1px solid #fce4ec;
+      margin-top: 0.5rem;
+    }
+    .send-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, #e91e63, #9c27b0);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 3px 10px rgba(233, 30, 99, 0.35);
+
+      mat-icon { font-size: 1.1rem; height: 1.1rem; width: 1.1rem; }
+
+      &:disabled {
+        background: #eee;
+        box-shadow: none;
+        cursor: default;
+        color: #bbb;
+      }
+      &:not(:disabled):hover {
+        transform: scale(1.08);
+        box-shadow: 0 4px 14px rgba(233, 30, 99, 0.45);
+      }
+    }
+
+    /* ── Note cards ── */
+    .notes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+    .note-card {
+      position: relative;
+      background: white;
+      border-radius: 16px;
+      padding: 1rem 2.5rem 0.8rem 1.2rem;
+      box-shadow: 0 3px 14px rgba(0,0,0,0.06);
+      border-left: 4px solid #f48fb1;
+      transition: transform 0.15s ease;
+
+      &:hover { transform: translateY(-1px); }
+
+      &.mine {
+        border-left-color: #e91e63;
+        background: linear-gradient(135deg, #fff, #fff9fb);
+      }
+    }
+    .note-text {
+      margin: 0 0 0.5rem;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #333;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .note-time {
+      font-size: 0.72rem;
+      color: #bbb;
+    }
+    .delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: #ddd;
+      font-size: 1.1rem;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      padding: 0;
+
+      &:hover {
+        background: #fce4ec;
+        color: #e91e63;
+      }
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .empty-heart { font-size: 3rem; }
+    .empty-state p { margin: 0; font-size: 1rem; font-weight: 500; color: #aaa; }
+    .empty-state span { font-size: 0.85rem; color: #ccc; }
   `],
 })
 export class NotesComponent implements OnInit {
@@ -67,6 +205,7 @@ export class NotesComponent implements OnInit {
   notes = signal<Note[]>([]);
   newNoteText = '';
   private coupleId = '';
+  private myUid = '';
 
   ngOnInit() {
     this.authService.currentUser$.pipe(
@@ -75,10 +214,15 @@ export class NotesComponent implements OnInit {
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(user => {
       this.coupleId = user!.coupleId!;
+      this.myUid = user!.uid;
       this.coupleService.getNotes$(this.coupleId)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(n => this.notes.set(n));
     });
+  }
+
+  isMyNote(note: Note): boolean {
+    return note.authorUid === this.myUid;
   }
 
   async addNote() {

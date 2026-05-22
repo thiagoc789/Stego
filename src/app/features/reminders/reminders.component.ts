@@ -7,7 +7,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatCardModule } from '@angular/material/card';
 import { CoupleService } from '../../core/services/couple.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Reminder } from '../../core/models/couple.model';
@@ -16,56 +15,188 @@ import { filter, take } from 'rxjs';
 @Component({
   selector: 'app-reminders',
   standalone: true,
-  imports: [DatePipe, FormsModule, MatButtonModule, MatIconModule, MatInputModule, MatFormFieldModule, MatCheckboxModule, MatCardModule],
+  imports: [DatePipe, FormsModule, MatButtonModule, MatIconModule, MatInputModule, MatFormFieldModule, MatCheckboxModule],
   template: `
-    <div class="reminders-container">
-      <h2>Recordatorios</h2>
+    <div class="reminders-page">
 
-      <div class="add-reminder">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Título</mat-label>
-          <input matInput [(ngModel)]="newTitle" placeholder="Aniversario, cita, etc." />
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Fecha y hora</mat-label>
-          <input matInput type="datetime-local" [(ngModel)]="newDatetime" />
-        </mat-form-field>
-        <button mat-raised-button color="primary" (click)="addReminder()" [disabled]="!newTitle.trim() || !newDatetime">
-          <mat-icon>add_alarm</mat-icon> Agregar
+      <!-- Add form -->
+      <div class="add-card">
+        <p class="add-title">Nuevo recordatorio</p>
+        <input class="text-input" [(ngModel)]="newTitle" placeholder="Aniversario, cita, evento..." />
+        <input class="text-input datetime" type="datetime-local" [(ngModel)]="newDatetime" />
+        <button class="add-btn" (click)="addReminder()" [disabled]="!newTitle.trim() || !newDatetime">
+          <mat-icon>add_alarm</mat-icon>
+          Agregar
         </button>
       </div>
 
+      <!-- List -->
       <div class="reminders-list">
-        @for (reminder of reminders(); track reminder.id) {
-          <mat-card [class.done]="reminder.done">
-            <mat-card-content class="reminder-row">
-              <mat-checkbox [checked]="reminder.done" (change)="toggle(reminder)"></mat-checkbox>
-              <div class="reminder-info">
-                <span class="reminder-title">{{ reminder.title }}</span>
-                <span class="reminder-date">{{ reminder.datetime | date:'d MMM yyyy, HH:mm' }}</span>
-              </div>
-              <button mat-icon-button color="warn" (click)="deleteReminder(reminder)">
-                <mat-icon>delete_outline</mat-icon>
-              </button>
-            </mat-card-content>
-          </mat-card>
+        @for (r of reminders(); track r.id) {
+          <div class="reminder-item" [class.done]="r.done">
+            <button class="check-btn" [class.checked]="r.done" (click)="toggle(r)">
+              @if (r.done) { ✓ } @else { &nbsp; }
+            </button>
+            <div class="reminder-info" (click)="toggle(r)">
+              <span class="reminder-title">{{ r.title }}</span>
+              <span class="reminder-date">{{ r.datetime | date:'EEEE d MMM · HH:mm' }}</span>
+            </div>
+            <button class="del-btn" (click)="deleteReminder(r)">×</button>
+          </div>
         } @empty {
-          <p class="empty">Sin recordatorios. ¡Agrega uno!</p>
+          <div class="empty-state">
+            <span>🗓️</span>
+            <p>Sin recordatorios</p>
+            <span class="empty-sub">¡Agrega fechas importantes!</span>
+          </div>
         }
       </div>
+
     </div>
   `,
   styles: [`
-    .reminders-container { padding: 1.5rem; max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; }
-    .add-reminder { display: flex; flex-direction: column; gap: 0.75rem; }
-    .full-width { width: 100%; }
-    .reminders-list { display: flex; flex-direction: column; gap: 0.75rem; }
-    .reminder-row { display: flex; align-items: center; gap: 0.75rem; }
-    .reminder-info { flex: 1; display: flex; flex-direction: column; }
-    .reminder-title { font-weight: 500; }
-    .reminder-date { font-size: 0.8rem; color: #888; }
-    mat-card.done { opacity: 0.5; }
-    .empty { text-align: center; color: #aaa; font-style: italic; }
+    .reminders-page {
+      padding: 1.2rem;
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    /* Add card */
+    .add-card {
+      background: white;
+      border-radius: 18px;
+      padding: 1.2rem;
+      box-shadow: 0 4px 20px rgba(194, 24, 91, 0.1);
+      border: 1.5px solid #fce4ec;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .add-title {
+      margin: 0;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #e91e63;
+    }
+    .text-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1.5px solid #f0d0dc;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      background: #fffbfc;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+
+      &:focus { border-color: #e91e63; }
+      &.datetime { color: #555; }
+    }
+    .add-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 0.75rem;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #e91e63, #9c27b0);
+      color: white;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 3px 12px rgba(233, 30, 99, 0.3);
+      transition: all 0.2s ease;
+
+      mat-icon { font-size: 1.1rem; height: 1.1rem; width: 1.1rem; }
+
+      &:disabled { background: #eee; color: #bbb; box-shadow: none; cursor: default; }
+      &:not(:disabled):hover { transform: translateY(-1px); }
+    }
+
+    /* Reminder items */
+    .reminders-list { display: flex; flex-direction: column; gap: 0.7rem; }
+    .reminder-item {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      background: white;
+      border-radius: 14px;
+      padding: 0.9rem 1rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      transition: all 0.2s ease;
+
+      &.done {
+        opacity: 0.5;
+        .reminder-title { text-decoration: line-through; }
+      }
+    }
+    .check-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid #f48fb1;
+      background: transparent;
+      color: white;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+
+      &.checked {
+        background: linear-gradient(135deg, #e91e63, #9c27b0);
+        border-color: transparent;
+      }
+    }
+    .reminder-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      cursor: pointer;
+    }
+    .reminder-title { font-size: 0.95rem; font-weight: 500; color: #333; }
+    .reminder-date { font-size: 0.75rem; color: #aaa; }
+    .del-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: #ddd;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+
+      &:hover { background: #fce4ec; color: #e91e63; }
+    }
+
+    /* Empty */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 2.5rem;
+    }
+    .empty-state p { margin: 0; font-size: 1rem; font-weight: 500; color: #aaa; }
+    .empty-sub { font-size: 0.85rem; color: #ccc; }
   `],
 })
 export class RemindersComponent implements OnInit {
@@ -98,11 +229,11 @@ export class RemindersComponent implements OnInit {
     this.newDatetime = '';
   }
 
-  async toggle(reminder: Reminder) {
-    await this.coupleService.toggleReminder(this.coupleId, reminder.id, !reminder.done);
+  async toggle(r: Reminder) {
+    await this.coupleService.toggleReminder(this.coupleId, r.id, !r.done);
   }
 
-  async deleteReminder(reminder: Reminder) {
-    await this.coupleService.deleteReminder(this.coupleId, reminder.id);
+  async deleteReminder(r: Reminder) {
+    await this.coupleService.deleteReminder(this.coupleId, r.id);
   }
 }
