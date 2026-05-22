@@ -187,22 +187,19 @@ export class CoupleService {
 
   getReminders$(coupleId: string): Observable<Reminder[]> {
     return new Observable(observer => {
-      const q = query(
-        collection(this.firestore, `couples/${coupleId}/reminders`),
-        orderBy('datetime', 'asc')
-      );
-      return onSnapshot(q, snap => {
+      const ref = collection(this.firestore, `couples/${coupleId}/reminders`);
+      return onSnapshot(ref, snap => {
         this.ngZone.run(() => observer.next(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Reminder)));
       });
     });
   }
 
-  async addReminder(coupleId: string, title: string, datetime: Date): Promise<void> {
+  async addReminder(coupleId: string, title: string): Promise<void> {
     await addDoc(collection(this.firestore, `couples/${coupleId}/reminders`), {
       title,
-      datetime,
       createdByUid: this.auth.currentUserUid,
       done: false,
+      createdAt: new Date(),
     });
   }
 

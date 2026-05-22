@@ -37,7 +37,7 @@ export interface Note {
 export interface Reminder {
   id: string;
   title: string;
-  datetime: Date;
   createdByUid: string;
   done: boolean;
+  createdAt: Date;
 }
