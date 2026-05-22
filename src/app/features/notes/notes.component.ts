@@ -9,14 +9,14 @@ import { AuthService } from '../../core/services/auth.service';
 import { Couple, Note } from '../../core/models/couple.model';
 
 const CARD_COLORS = [
-  '#f8bbd0', // rosa
-  '#e1bee7', // violeta
-  '#fff59d', // amarillo
+  '#d1c4e9', // lavanda
+  '#bbdefb', // azul claro
   '#b2ebf2', // celeste
-  '#c8e6c9', // verde
-  '#ffcc80', // naranja
-  '#f48fb1', // rosa fuerte
-  '#ce93d8', // lila
+  '#c5cae9', // periwinkle
+  '#b2dfdb', // verde agua
+  '#dcedc8', // verde menta
+  '#fff9c4', // amarillo suave
+  '#e1bee7', // lila
 ];
 
 @Component({
