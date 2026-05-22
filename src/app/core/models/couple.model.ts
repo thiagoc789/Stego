@@ -37,7 +37,18 @@ export interface Note {
 export interface Reminder {
   id: string;
   title: string;
-  datetime: Date;
   createdByUid: string;
   done: boolean;
+  createdAt: Date;
+}
+
+export interface Photo {
+  id: string;
+  url: string;
+  storagePath: string;
+  uploaderUid: string;
+  caption: string;
+  place: string;
+  memoryDate: string;
+  createdAt: Date;
 }

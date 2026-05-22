@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, NgZone } from '@angular/core';
 import { Firestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, onSnapshot, query, orderBy, deleteDoc } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { Couple, DailyAnswer, KnowledgeRound, Note, Reminder } from '../models/couple.model';
@@ -10,7 +10,8 @@ import { KNOWLEDGE_QUESTIONS, KnowledgeQuestion } from '../data/knowledge-questi
 @Injectable({ providedIn: 'root' })
 export class CoupleService {
   private firestore = inject(Firestore);
-  private auth = inject(AuthService);
+  private auth      = inject(AuthService);
+  private ngZone    = inject(NgZone);
 
   // ── Linking ──────────────────────────────────────────────────────────
 
@@ -64,7 +65,7 @@ export class CoupleService {
     return new Observable(observer => {
       const ref = doc(this.firestore, `couples/${coupleId}`);
       return onSnapshot(ref, snap => {
-        if (snap.exists()) observer.next({ id: snap.id, ...snap.data() } as Couple);
+        if (snap.exists()) this.ngZone.run(() => observer.next({ id: snap.id, ...snap.data() } as Couple));
       });
     });
   }
@@ -86,7 +87,7 @@ export class CoupleService {
     return new Observable(observer => {
       const ref = doc(this.firestore, `couples/${coupleId}/dailyAnswers/${today}`);
       return onSnapshot(ref, snap => {
-        observer.next(snap.exists() ? (snap.data() as DailyAnswer) : null);
+        this.ngZone.run(() => observer.next(snap.exists() ? (snap.data() as DailyAnswer) : null));
       });
     });
   }
@@ -121,7 +122,7 @@ export class CoupleService {
     return new Observable(observer => {
       const ref = doc(this.firestore, `couples/${coupleId}/knowledgeRounds/${today}`);
       return onSnapshot(ref, snap => {
-        observer.next(snap.exists() ? (snap.data() as KnowledgeRound) : null);
+        this.ngZone.run(() => observer.next(snap.exists() ? (snap.data() as KnowledgeRound) : null));
       });
     });
   }
@@ -162,7 +163,7 @@ export class CoupleService {
         orderBy('createdAt', 'desc')
       );
       return onSnapshot(q, snap => {
-        observer.next(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Note));
+        this.ngZone.run(() => observer.next(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Note)));
       });
     });
   }
@@ -186,22 +187,19 @@ export class CoupleService {
 
   getReminders$(coupleId: string): Observable<Reminder[]> {
     return new Observable(observer => {
-      const q = query(
-        collection(this.firestore, `couples/${coupleId}/reminders`),
-        orderBy('datetime', 'asc')
-      );
-      return onSnapshot(q, snap => {
-        observer.next(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Reminder));
+      const ref = collection(this.firestore, `couples/${coupleId}/reminders`);
+      return onSnapshot(ref, snap => {
+        this.ngZone.run(() => observer.next(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Reminder)));
       });
     });
   }
 
-  async addReminder(coupleId: string, title: string, datetime: Date): Promise<void> {
+  async addReminder(coupleId: string, title: string): Promise<void> {
     await addDoc(collection(this.firestore, `couples/${coupleId}/reminders`), {
       title,
-      datetime,
       createdByUid: this.auth.currentUserUid,
       done: false,
+      createdAt: new Date(),
     });
   }
 
