@@ -25,11 +25,9 @@ import { APP_VERSION } from './version';
             </div>
             <div class="header-right">
               <span class="version-tag">v{{ version }}</span>
-              @if (showNotifBtn()) {
-                <button mat-icon-button class="notif-btn" (click)="enableNotifications()" aria-label="Activar notificaciones">
-                  <mat-icon>notifications_off</mat-icon>
-                </button>
-              }
+              <button mat-icon-button class="notif-btn" (click)="enableNotifications()" aria-label="Activar notificaciones">
+                <mat-icon>{{ notifGranted() ? 'notifications' : 'notifications_off' }}</mat-icon>
+              </button>
               <button mat-icon-button class="logout-btn" (click)="auth.logout()" aria-label="Cerrar sesión">
                 <mat-icon>logout</mat-icon>
               </button>
@@ -103,7 +101,8 @@ import { APP_VERSION } from './version';
       font-size: 0.6rem; color: rgba(255,255,255,0.45);
       font-weight: 500; letter-spacing: 0.3px;
     }
-    .notif-btn { color: rgba(255,255,255,0.7); }
+    .notif-btn { color: rgba(255,255,255,0.75); transition: color 0.2s; }
+    .notif-btn:hover { color: white; }
     .logout-btn { color: rgba(255,255,255,0.8); }
 
     .content { flex: 1; overflow-y: auto; padding-bottom: 80px; }
@@ -141,7 +140,7 @@ export class App implements OnInit {
   private coupleService = inject(CoupleService);
   private destroyRef = inject(DestroyRef);
 
-  showNotifBtn = signal(false);
+  notifGranted = signal(false);
   private currentUid: string | null = null;
 
   couple$ = this.auth.currentUser$.pipe(
@@ -158,14 +157,12 @@ export class App implements OnInit {
     ).subscribe(user => {
       this.currentUid = user!.uid;
       this.notificationService.listenForeground();
+      this.notifGranted.set('Notification' in window && Notification.permission === 'granted');
 
-      // On non-iOS or if already granted, request automatically
+      // On non-iOS request automatically; on iOS wait for user tap
       if (!this.isIos()) {
-        this.notificationService.requestPermission(user!.uid);
-      } else {
-        // On iOS PWA: only show the bell button if not yet granted
-        this.showNotifBtn.set(
-          'Notification' in window && Notification.permission !== 'granted'
+        this.notificationService.requestPermission(user!.uid).then(() =>
+          this.notifGranted.set('Notification' in window && Notification.permission === 'granted')
         );
       }
     });
@@ -174,10 +171,7 @@ export class App implements OnInit {
   async enableNotifications() {
     if (!this.currentUid) return;
     await this.notificationService.requestPermission(this.currentUid);
-    // Hide button once granted (or after they respond)
-    this.showNotifBtn.set(
-      'Notification' in window && Notification.permission !== 'granted'
-    );
+    this.notifGranted.set('Notification' in window && Notification.permission === 'granted');
   }
 
   private isIos(): boolean {
