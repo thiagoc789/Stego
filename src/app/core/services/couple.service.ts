@@ -211,6 +211,27 @@ export class CoupleService {
     await deleteDoc(doc(this.firestore, `couples/${coupleId}/reminders/${reminderId}`));
   }
 
+  getQuestionById(id: number): string {
+    return DAILY_QUESTIONS[id % DAILY_QUESTIONS.length];
+  }
+
+  getDailyHistory$(coupleId: string): Observable<DailyAnswer[]> {
+    return new Observable(observer => {
+      const q = query(
+        collection(this.firestore, `couples/${coupleId}/dailyAnswers`),
+        orderBy('date', 'desc')
+      );
+      return onSnapshot(q, snap => {
+        const today = this.todayKey();
+        this.ngZone.run(() => observer.next(
+          snap.docs
+            .map(d => d.data() as DailyAnswer)
+            .filter(a => a.date !== today)
+        ));
+      });
+    });
+  }
+
   // ── Helpers ──────────────────────────────────────────────────────────
 
   private async getUserDisplayName(uid: string): Promise<string> {
@@ -223,13 +244,28 @@ export class CoupleService {
     return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
   }
 
-  private todayKey(): string {
-    return new Date().toISOString().split('T')[0];
+  // Colombia = UTC-5, no DST. Subtracting 5h from UTC gives a Date whose
+  // UTC accessors return Colombia's wall-clock values.
+  private getColombiaDate(): Date {
+    return new Date(Date.now() - 5 * 3_600_000);
+  }
+
+  todayKey(): string {
+    return this.getColombiaDate().toISOString().split('T')[0];
   }
 
   private getDayOfYear(): number {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), 0, 0);
-    return Math.floor((now.getTime() - start.getTime()) / 86400000);
+    const d = this.getColombiaDate();
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 0));
+    return Math.floor((d.getTime() - yearStart.getTime()) / 86_400_000);
+  }
+
+  static msUntilMidnightColombia(): number {
+    // Midnight Colombia = 05:00 UTC of the next Colombia day
+    const col = new Date(Date.now() - 5 * 3_600_000);
+    const nextMidnight = new Date(Date.UTC(
+      col.getUTCFullYear(), col.getUTCMonth(), col.getUTCDate() + 1, 5
+    ));
+    return nextMidnight.getTime() - Date.now();
   }
 }
