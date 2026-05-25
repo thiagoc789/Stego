@@ -14,8 +14,15 @@ import { Couple, Reminder } from '../../core/models/couple.model';
   template: `
     <div class="page">
 
+      <!-- Loading skeleton -->
+      @if (loading()) {
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card short"></div>
+      }
+
       <!-- Progress header -->
-      @if (reminders().length > 0) {
+      @if (!loading() && reminders().length > 0) {
         <div class="progress-card">
           <div class="progress-texts">
             <span class="progress-label">Tareas</span>
@@ -33,6 +40,7 @@ import { Couple, Reminder } from '../../core/models/couple.model';
       }
 
       <!-- Pending tasks -->
+      @if (!loading()) {
       <div class="section">
         @for (r of pending(); track r.id) {
           <div class="task-row">
@@ -51,7 +59,7 @@ import { Couple, Reminder } from '../../core/models/couple.model';
           </div>
         }
 
-        @if (pending().length === 0 && done().length === 0) {
+        @if (!loading() && pending().length === 0 && done().length === 0) {
           <div class="empty-state">
             <mat-icon>checklist</mat-icon>
             <p>Sin tareas pendientes</p>
@@ -60,8 +68,10 @@ import { Couple, Reminder } from '../../core/models/couple.model';
         }
       </div>
 
+      } <!-- end !loading() pending section -->
+
       <!-- Completed tasks -->
-      @if (done().length > 0) {
+      @if (!loading() && done().length > 0) {
         <div class="section">
           <div class="section-header">
             <span>Completadas · {{ done().length }}</span>
@@ -115,6 +125,16 @@ import { Couple, Reminder } from '../../core/models/couple.model';
       flex-direction: column;
       gap: 0.75rem;
     }
+
+    /* ── Skeleton ── */
+    .skeleton-card {
+      height: 72px; border-radius: 18px;
+      background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      &.short { height: 48px; }
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
     /* ── Progress ── */
     .progress-card {
@@ -326,6 +346,7 @@ export class RemindersComponent implements OnInit {
 
   reminders = signal<Reminder[]>([]);
   couple    = signal<Couple | null>(null);
+  loading   = signal(true);
   newTitle  = '';
   myUid     = '';
   private coupleId = '';
@@ -359,7 +380,7 @@ export class RemindersComponent implements OnInit {
       this.couple.set(couple);
       this.coupleService.getReminders$(this.coupleId)
         .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe(r => this.reminders.set(r));
+        .subscribe(r => { this.reminders.set(r); this.loading.set(false); });
     });
   }
 
