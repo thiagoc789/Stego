@@ -105,7 +105,7 @@ import { APP_VERSION } from './version';
     .notif-btn:hover { color: white; }
     .logout-btn { color: rgba(255,255,255,0.8); }
 
-    .content { flex: 1; overflow-y: auto; padding-bottom: 80px; }
+    .content { flex: 1; overflow-y: auto; padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
 
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0;

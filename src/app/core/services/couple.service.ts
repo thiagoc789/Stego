@@ -215,6 +215,10 @@ export class CoupleService {
     return DAILY_QUESTIONS[id % DAILY_QUESTIONS.length];
   }
 
+  getKnowledgeQuestionById(id: number): string {
+    return KNOWLEDGE_QUESTIONS[id % KNOWLEDGE_QUESTIONS.length].question;
+  }
+
   getDailyHistory$(coupleId: string): Observable<DailyAnswer[]> {
     return new Observable(observer => {
       const q = query(
@@ -227,6 +231,21 @@ export class CoupleService {
           snap.docs
             .map(d => d.data() as DailyAnswer)
             .filter(a => a.date !== today)
+        ));
+      });
+    });
+  }
+
+  getKnowledgeHistory$(coupleId: string): Observable<KnowledgeRound[]> {
+    return new Observable(observer => {
+      const q = query(
+        collection(this.firestore, `couples/${coupleId}/knowledgeRounds`),
+        orderBy('date', 'desc')
+      );
+      return onSnapshot(q, snap => {
+        const today = this.todayKey();
+        this.ngZone.run(() => observer.next(
+          snap.docs.map(d => d.data() as KnowledgeRound).filter(r => r.date !== today)
         ));
       });
     });

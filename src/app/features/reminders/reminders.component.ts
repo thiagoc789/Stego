@@ -120,7 +120,7 @@ import { Couple, Reminder } from '../../core/models/couple.model';
       padding: 1rem;
       max-width: 480px;
       margin: 0 auto;
-      padding-bottom: 5.5rem;
+      padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
       display: flex;
       flex-direction: column;
       gap: 0.75rem;

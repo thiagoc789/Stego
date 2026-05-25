@@ -185,7 +185,7 @@ import { Couple, Photo } from '../../core/models/couple.model';
 
     .page {
       padding: 0.75rem;
-      padding-bottom: 5.5rem;
+      padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
       max-width: 480px;
       margin: 0 auto;
     }

@@ -139,7 +139,7 @@ const CARD_COLORS = [
       padding: 1rem;
       max-width: 600px;
       margin: 0 auto;
-      padding-bottom: 6rem;
+      padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
     }
 
     /* ── Add panel ── */
