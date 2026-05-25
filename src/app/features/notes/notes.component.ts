@@ -139,7 +139,7 @@ const CARD_COLORS = [
       padding: 1rem;
       max-width: 600px;
       margin: 0 auto;
-      padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
     }
 
     /* ── Add panel ── */
@@ -268,7 +268,7 @@ const CARD_COLORS = [
     /* ── FAB ── */
     .fab {
       position: fixed;
-      bottom: calc(68px + 1.2rem); right: 1.2rem;
+      bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 1.2rem); right: 1.2rem;
       width: 52px; height: 52px; border-radius: 50%; border: none;
       background: linear-gradient(135deg, #e91e63, #9c27b0);
       color: white; display: flex; align-items: center; justify-content: center;

@@ -185,7 +185,7 @@ import { Couple, Photo } from '../../core/models/couple.model';
 
     .page {
       padding: 0.75rem;
-      padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
       max-width: 480px;
       margin: 0 auto;
     }
@@ -268,7 +268,7 @@ import { Couple, Photo } from '../../core/models/couple.model';
 
     /* ── FAB ── */
     .fab {
-      position: fixed; bottom: calc(68px + 1rem); right: 1rem;
+      position: fixed; bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 1rem); right: 1rem;
       width: 52px; height: 52px; border-radius: 50%; border: none;
       background: linear-gradient(135deg, #e91e63, #9c27b0);
       color: white; display: flex; align-items: center; justify-content: center;
