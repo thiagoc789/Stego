@@ -127,39 +127,45 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
             <div class="popup-section">
               <div class="popup-label">🧠 Juego de conocimiento</div>
               <p class="popup-question">{{ coupleService.getKnowledgeQuestionById(kr.questionId) }}</p>
-              <div class="popup-answers">
-                <!-- User1 row -->
-                @if (kr.user1OwnAnswer) {
-                  <div class="pa" [class.mine]="isUser1" [class.partner]="!isUser1">
-                    <span class="pa-who">{{ isUser1 ? myName() : partnerName() }}</span>
-                    <span class="pa-text">{{ kr.user1OwnAnswer }}</span>
+              <div class="kr-grid">
+                <!-- User1 column -->
+                <div class="kr-col" [class.mine]="isUser1" [class.partner]="!isUser1">
+                  <span class="kr-name">{{ isUser1 ? myName() : partnerName() }}</span>
+                  <div class="kr-block">
+                    <span class="kr-lbl">Respondió</span>
+                    <span class="kr-val">{{ kr.user1OwnAnswer ?? '—' }}</span>
                   </div>
-                }
-                @if (kr.user2Guess) {
-                  <div class="pa guess" [class.mine]="!isUser1" [class.partner]="isUser1">
-                    <span class="pa-who">{{ !isUser1 ? myName() : partnerName() }} adivinó</span>
-                    <span class="pa-text">{{ kr.user2Guess }}</span>
-                    <span class="kr-badge" [class.ok]="kr.user2Guess === kr.user1OwnAnswer">
-                      {{ kr.user2Guess === kr.user1OwnAnswer ? '✓' : '✗' }}
-                    </span>
+                  <div class="kr-block guess">
+                    <span class="kr-lbl">{{ !isUser1 ? myName() : partnerName() }} adivinó</span>
+                    <div class="kr-guess-row">
+                      <span class="kr-val">{{ kr.user2Guess ?? '—' }}</span>
+                      @if (kr.user2Guess) {
+                        <span class="kr-badge" [class.ok]="kr.user2Guess === kr.user1OwnAnswer">
+                          {{ kr.user2Guess === kr.user1OwnAnswer ? '✓' : '✗' }}
+                        </span>
+                      }
+                    </div>
                   </div>
-                }
-                <!-- User2 row -->
-                @if (kr.user2OwnAnswer) {
-                  <div class="pa" [class.mine]="!isUser1" [class.partner]="isUser1">
-                    <span class="pa-who">{{ !isUser1 ? myName() : partnerName() }}</span>
-                    <span class="pa-text">{{ kr.user2OwnAnswer }}</span>
+                </div>
+                <!-- User2 column -->
+                <div class="kr-col" [class.mine]="!isUser1" [class.partner]="isUser1">
+                  <span class="kr-name">{{ !isUser1 ? myName() : partnerName() }}</span>
+                  <div class="kr-block">
+                    <span class="kr-lbl">Respondió</span>
+                    <span class="kr-val">{{ kr.user2OwnAnswer ?? '—' }}</span>
                   </div>
-                }
-                @if (kr.user1Guess) {
-                  <div class="pa guess" [class.mine]="isUser1" [class.partner]="!isUser1">
-                    <span class="pa-who">{{ isUser1 ? myName() : partnerName() }} adivinó</span>
-                    <span class="pa-text">{{ kr.user1Guess }}</span>
-                    <span class="kr-badge" [class.ok]="kr.user1Guess === kr.user2OwnAnswer">
-                      {{ kr.user1Guess === kr.user2OwnAnswer ? '✓' : '✗' }}
-                    </span>
+                  <div class="kr-block guess">
+                    <span class="kr-lbl">{{ isUser1 ? myName() : partnerName() }} adivinó</span>
+                    <div class="kr-guess-row">
+                      <span class="kr-val">{{ kr.user1Guess ?? '—' }}</span>
+                      @if (kr.user1Guess) {
+                        <span class="kr-badge" [class.ok]="kr.user1Guess === kr.user2OwnAnswer">
+                          {{ kr.user1Guess === kr.user2OwnAnswer ? '✓' : '✗' }}
+                        </span>
+                      }
+                    </div>
                   </div>
-                }
+                </div>
               </div>
             </div>
           }
@@ -271,12 +277,32 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
     .popup-label { font-size: 0.8rem; font-weight: 700; color: #999; }
     .popup-question { margin: 0; font-size: 0.95rem; font-weight: 500; color: #333; line-height: 1.5; }
     .popup-answers { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.1rem; }
-    .pa { display: flex; gap: 8px; align-items: baseline; font-size: 0.85rem; flex-wrap: wrap; &.guess { opacity: 0.75; font-size: 0.8rem; } }
+    /* daily popup answers */
+    .pa { display: flex; gap: 8px; align-items: baseline; font-size: 0.85rem; flex-wrap: wrap; }
     .pa.mine    .pa-who { color: #e91e63; }
     .pa.partner .pa-who { color: #9c27b0; }
     .pa-who { font-weight: 700; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; flex-shrink: 0; }
     .pa-text { color: #444; line-height: 1.4; }
-    .kr-badge { width: 20px; height: 20px; border-radius: 50%; font-size: 0.7rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; background: #fce4ec; color: #e91e63; &.ok { background: #e8f5e9; color: #4caf50; } }
+
+    /* knowledge two-column grid */
+    .kr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-top: 0.2rem; }
+    .kr-col {
+      border-radius: 14px; padding: 0.75rem 0.8rem;
+      display: flex; flex-direction: column; gap: 0.55rem;
+      &.mine    { background: #fff0f5; border: 1.5px solid #fce4ec; }
+      &.partner { background: #f5f0ff; border: 1.5px solid #ede7f6; }
+    }
+    .kr-name {
+      font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+      .mine &    { color: #e91e63; }
+      .partner & { color: #9c27b0; }
+    }
+    .kr-block { display: flex; flex-direction: column; gap: 2px; }
+    .kr-block.guess { padding-top: 0.45rem; border-top: 1px dashed #eee; }
+    .kr-lbl { font-size: 0.62rem; color: #bbb; text-transform: uppercase; letter-spacing: 0.3px; font-weight: 600; }
+    .kr-val { font-size: 0.84rem; color: #333; font-weight: 500; line-height: 1.3; }
+    .kr-guess-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+    .kr-badge { width: 18px; height: 18px; border-radius: 50%; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; background: #fce4ec; color: #e91e63; &.ok { background: #e8f5e9; color: #4caf50; } }
   `],
 })
 export class DailyQuestionComponent implements OnInit, OnDestroy {
