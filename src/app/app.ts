@@ -154,6 +154,11 @@ export class App implements OnInit {
   );
 
   ngOnInit() {
+    // Reset viewport scroll after keyboard dismissal on iOS PWA
+    document.addEventListener('focusout', () => {
+      window.setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }), 80);
+    });
+
     this.auth.currentUser$.pipe(
       filter(u => !!u?.coupleId),
       take(1),
