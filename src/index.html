@@ -77,22 +77,34 @@
     <app-root></app-root>
     <noscript>Please enable JavaScript to continue using this application.</noscript>
     <script>
-      // Hide splash once Angular bootstraps
+      // Hide splash only when BOTH conditions are met:
+      //   1. Minimum 3.5s have passed
+      //   2. Angular has bootstrapped (app-root has children)
+      // Whichever arrives last triggers the hide — no max cap.
       (function() {
         var splash = document.getElementById('splash');
         var hidden = false;
-        function hideSplash() {
-          if (hidden) return;
+        var minTimeDone = false;
+        var appReady = false;
+
+        function tryHide() {
+          if (hidden || !minTimeDone || !appReady) return;
           hidden = true;
           splash.classList.add('hidden');
-          setTimeout(function() { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 700);
+          setTimeout(function() {
+            if (splash.parentNode) splash.parentNode.removeChild(splash);
+          }, 700);
         }
-        // Fallback: hide after 3s max
-        setTimeout(hideSplash, 3000);
-        // Hide once app-root has content
+
+        setTimeout(function() { minTimeDone = true; tryHide(); }, 3500);
+
         var observer = new MutationObserver(function() {
           var root = document.querySelector('app-root');
-          if (root && root.children.length > 0) { hideSplash(); observer.disconnect(); }
+          if (root && root.children.length > 0) {
+            appReady = true;
+            tryHide();
+            observer.disconnect();
+          }
         });
         observer.observe(document.body, { childList: true, subtree: true });
       })();
