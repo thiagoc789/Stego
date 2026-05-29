@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, take, switchMap } from 'rxjs';
 import { CoupleService } from '../../core/services/couple.service';
@@ -13,9 +13,15 @@ import { KnowledgeRound } from '../../core/models/couple.model';
     <div class="knowledge-section">
       <div class="knowledge-header">
         <span>🧠</span>
-        <div>
+        <div class="header-body">
           <h3>¿Cuánto nos conocemos?</h3>
           <p>{{ kQuestion?.question }}</p>
+          <div class="kg-meta">
+            <span class="kg-countdown">⏱ Próxima en {{ countdown() }}</span>
+            @if (streak() > 0) {
+              <span class="kg-streak">🔥 {{ streak() }} {{ streak() === 1 ? 'día' : 'días' }}</span>
+            }
+          </div>
         </div>
       </div>
 
@@ -91,13 +97,25 @@ import { KnowledgeRound } from '../../core/models/couple.model';
 
     .knowledge-header {
       display: flex; gap: 0.75rem; align-items: flex-start;
-      padding: 1.2rem 1.2rem 0.8rem;
+      padding: 1.2rem 1.2rem 1rem;
       background: linear-gradient(135deg, #f5f3ff, #ede9fe);
       border-radius: 18px; border-left: 4px solid #7c3aed;
     }
     .knowledge-header > span { font-size: 1.6rem; flex-shrink: 0; }
-    .knowledge-header h3 { margin: 0 0 4px; font-size: 0.8rem; font-weight: 700; color: #6d28d9; text-transform: uppercase; letter-spacing: 1px; }
+    .header-body { display: flex; flex-direction: column; gap: 0.4rem; flex: 1; min-width: 0; }
+    .knowledge-header h3 { margin: 0; font-size: 0.8rem; font-weight: 700; color: #6d28d9; text-transform: uppercase; letter-spacing: 1px; }
     .knowledge-header p { margin: 0; font-size: 1rem; font-weight: 500; color: #333; line-height: 1.4; }
+
+    .kg-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.2rem; }
+    .kg-countdown {
+      font-size: 0.7rem; color: #888;
+      background: rgba(0,0,0,0.06); padding: 3px 10px; border-radius: 20px;
+      font-variant-numeric: tabular-nums; letter-spacing: 0.3px;
+    }
+    .kg-streak {
+      font-size: 0.7rem; font-weight: 700; color: #7c3aed;
+      background: #ddd6fe; padding: 3px 10px; border-radius: 20px;
+    }
 
     .step-card {
       background: white; border-radius: 16px; padding: 1.2rem;
@@ -129,7 +147,7 @@ import { KnowledgeRound } from '../../core/models/couple.model';
     }
     .result-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
     .result-info { display: flex; flex-direction: column; gap: 2px; flex: 1; }
-    .result-name { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #ec4899; }
+    .result-name { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
     .result-name.mine { color: #7c3aed; }
     .result-name.partner { color: #ec4899; }
     .result-answer { font-size: 0.9rem; color: #333; }
@@ -162,12 +180,34 @@ export class KnowledgeGameComponent implements OnInit {
   partnerOwnAnswer = signal<string | null>(null);
   partnerGuess     = signal<string | null>(null);
   partnerName      = signal('tu pareja');
+  countdown        = signal('--:--:--');
+  knowledgeHistory = signal<KnowledgeRound[]>([]);
+
+  streak = computed(() => {
+    const history = this.knowledgeHistory();
+    const todayComplete = !!(this.myOwnAnswer() && this.partnerOwnAnswer());
+    let count = todayComplete ? 1 : 0;
+    const completeDays = new Set(
+      history.filter(r => r.user1OwnAnswer && r.user2OwnAnswer).map(r => r.date)
+    );
+    const col = new Date(Date.now() - 5 * 3_600_000);
+    col.setUTCDate(col.getUTCDate() - 1);
+    for (let i = 0; i < 365; i++) {
+      const ds = `${col.getUTCFullYear()}-${String(col.getUTCMonth()+1).padStart(2,'0')}-${String(col.getUTCDate()).padStart(2,'0')}`;
+      if (completeDays.has(ds)) { count++; col.setUTCDate(col.getUTCDate() - 1); }
+      else break;
+    }
+    return count;
+  });
 
   private coupleId = '';
   private isUser1  = true;
+  private tickInterval: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit() {
     this.kQuestion = this.coupleService.getTodayKnowledgeQuestion();
+    this.startCountdown();
+    this.destroyRef.onDestroy(() => { if (this.tickInterval) clearInterval(this.tickInterval); });
 
     this.authService.currentUser$.pipe(
       filter(u => !!u?.coupleId),
@@ -177,7 +217,6 @@ export class KnowledgeGameComponent implements OnInit {
         const uid = user!.uid;
         return this.coupleService.getCouple$(this.coupleId).pipe(
           take(1),
-          // side-effect: set role and partner name, then start round listener
           (obs) => {
             obs.subscribe(couple => {
               this.isUser1 = couple.user1Uid === uid;
@@ -188,6 +227,9 @@ export class KnowledgeGameComponent implements OnInit {
               this.coupleService.getKnowledgeRound$(this.coupleId)
                 .pipe(takeUntilDestroyed(this.destroyRef))
                 .subscribe(round => this.applyRound(round));
+              this.coupleService.getKnowledgeHistory$(this.coupleId)
+                .pipe(takeUntilDestroyed(this.destroyRef))
+                .subscribe(h => this.knowledgeHistory.set(h));
             });
             return obs;
           }
@@ -203,6 +245,18 @@ export class KnowledgeGameComponent implements OnInit {
     this.myGuess.set(this.isUser1 ? round.user1Guess : round.user2Guess);
     this.partnerOwnAnswer.set(this.isUser1 ? round.user2OwnAnswer : round.user1OwnAnswer);
     this.partnerGuess.set(this.isUser1 ? round.user2Guess : round.user1Guess);
+  }
+
+  private startCountdown() {
+    const tick = () => {
+      const ms = CoupleService.msUntilMidnightColombia();
+      const h = Math.floor(ms / 3_600_000);
+      const m = Math.floor((ms % 3_600_000) / 60_000);
+      const s = Math.floor((ms % 60_000) / 1_000);
+      this.countdown.set(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);
+    };
+    tick();
+    this.tickInterval = setInterval(tick, 1_000);
   }
 
   async answerOwn(answer: string) {
