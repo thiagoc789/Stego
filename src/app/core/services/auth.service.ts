@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Auth, GoogleAuthProvider, signInWithPopup, signOut, user } from '@angular/fire/auth';
 import { Firestore, doc, setDoc, getDoc, onSnapshot } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
-import { Observable, from, switchMap, of } from 'rxjs';
+import { Observable, from, switchMap, of, shareReplay } from 'rxjs';
 import { AppUser } from '../models/user.model';
 
 @Injectable({ providedIn: 'root' })
@@ -11,7 +11,9 @@ export class AuthService {
   private firestore = inject(Firestore);
   private router = inject(Router);
 
-  // Uses onSnapshot so currentUser$ updates reactively when coupleId changes in Firestore
+  // shareReplay(1): all subscribers share one chain and get the last value immediately.
+  // Without this, each component subscription re-runs the full auth→Firestore pipeline,
+  // causing a cold-start race where components initialize before the chain emits.
   readonly currentUser$: Observable<AppUser | null> = user(this.auth).pipe(
     switchMap(firebaseUser => {
       if (!firebaseUser) return of(null);
@@ -25,7 +27,8 @@ export class AuthService {
           })
         )
       );
-    })
+    }),
+    shareReplay(1),
   );
 
   async loginWithGoogle(): Promise<void> {
