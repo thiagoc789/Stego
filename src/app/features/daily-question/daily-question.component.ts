@@ -200,9 +200,9 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
 
     /* Question card */
     .question-card {
-      background: linear-gradient(135deg, #e91e63 0%, #ad1457 60%, #7b1fa2 100%);
+      background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 60%, #2e1065 100%);
       border-radius: 22px; padding: 1.8rem 1.5rem 1.2rem; color: white;
-      box-shadow: 0 8px 28px rgba(233,30,99,0.3); position: relative; overflow: hidden;
+      box-shadow: 0 8px 28px rgba(124,58,237,0.3); position: relative; overflow: hidden;
       transition: padding 0.3s ease;
       &::before { content: '♡'; position: absolute; top: -15px; right: -10px; font-size: 7rem; color: rgba(255,255,255,0.07); line-height: 1; }
       &.compact { padding: 1rem 1.2rem; }
@@ -219,25 +219,25 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
     /* Answers */
     .answers { display: flex; flex-direction: column; gap: 0.9rem; }
     .answer-card { border-radius: 18px; padding: 1rem 1.2rem; box-shadow: 0 3px 12px rgba(0,0,0,0.07); }
-    .answer-card.mine    { background: white; border-left: 4px solid #e91e63; }
-    .answer-card.partner { background: white; border-left: 4px solid #9c27b0; }
+    .answer-card.mine    { background: white; border-left: 4px solid #7c3aed; }
+    .answer-card.partner { background: white; border-left: 4px solid #6d28d9; }
     .answer-who { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 0.5rem; }
-    .mine    .answer-who { color: #e91e63; }
-    .partner .answer-who { color: #9c27b0; }
+    .mine    .answer-who { color: #7c3aed; }
+    .partner .answer-who { color: #6d28d9; }
     .answer-text { margin: 0; font-size: 0.95rem; line-height: 1.6; color: #333; }
     .waiting-card { text-align: center; padding: 1.5rem; background: white; border-radius: 16px; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; opacity: 0.7; span { font-size: 2rem; } p { margin: 0; font-size: 0.85rem; color: #aaa; } }
 
     /* Input */
     .input-section { display: flex; flex-direction: column; gap: 0.75rem; }
-    .answer-input { width: 100%; border: 1.5px solid #fce4ec; border-radius: 16px; padding: 1rem; font-size: 0.95rem; font-family: inherit; line-height: 1.6; resize: none; outline: none; background: white; box-sizing: border-box; transition: border-color 0.2s; &:focus { border-color: #e91e63; } &::placeholder { color: #ddd; } }
-    .submit-btn { padding: 0.85rem; border-radius: 14px; border: none; background: linear-gradient(135deg, #e91e63, #9c27b0); color: white; font-size: 0.95rem; font-weight: 600; cursor: pointer; box-shadow: 0 4px 14px rgba(233,30,99,0.35); transition: all 0.2s ease; &:disabled { background: #eee; color: #bbb; box-shadow: none; cursor: default; } }
+    .answer-input { width: 100%; border: 1.5px solid #ede9fe; border-radius: 16px; padding: 1rem; font-size: 0.95rem; font-family: inherit; line-height: 1.6; resize: none; outline: none; background: white; box-sizing: border-box; transition: border-color 0.2s; &:focus { border-color: #7c3aed; } &::placeholder { color: #ddd; } }
+    .submit-btn { padding: 0.85rem; border-radius: 14px; border: none; background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; font-size: 0.95rem; font-weight: 600; cursor: pointer; box-shadow: 0 4px 14px rgba(124,58,237,0.35); transition: all 0.2s ease; &:disabled { background: #eee; color: #bbb; box-shadow: none; cursor: default; } }
 
-    .section-divider { display: flex; align-items: center; gap: 0.75rem; span:first-child, span:last-child { flex: 1; height: 1px; background: #eee; } span:nth-child(2) { font-size: 0.85rem; color: #e0a0c0; } }
+    .section-divider { display: flex; align-items: center; gap: 0.75rem; span:first-child, span:last-child { flex: 1; height: 1px; background: #eee; } span:nth-child(2) { font-size: 0.85rem; color: #c4b5fd; } }
 
     /* Calendar */
     .calendar-section { background: white; border-radius: 20px; padding: 1rem; box-shadow: 0 3px 14px rgba(0,0,0,0.06); }
     .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem; }
-    .cal-nav { background: none; border: none; font-size: 1.5rem; color: #e91e63; cursor: pointer; padding: 0.1rem 0.5rem; border-radius: 8px; line-height: 1; &:hover { background: #fce4ec; } }
+    .cal-nav { background: none; border: none; font-size: 1.5rem; color: #7c3aed; cursor: pointer; padding: 0.1rem 0.5rem; border-radius: 8px; line-height: 1; &:hover { background: #ede9fe; } }
     .cal-title { font-size: 0.88rem; font-weight: 700; color: #333; text-transform: capitalize; }
     .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
     .cal-weekday { text-align: center; font-size: 0.62rem; font-weight: 700; color: #ccc; text-transform: uppercase; padding: 0.3rem 0; }
@@ -246,11 +246,11 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
       font-size: 0.78rem; color: #aaa; cursor: default;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       position: relative; gap: 1px;
-      &.today { background: #fce4ec; color: #e91e63; font-weight: 700; }
-      &.has-entry { cursor: pointer; color: #333; font-weight: 600; &:hover { background: #f3e5f5; } }
+      &.today { background: #ede9fe; color: #7c3aed; font-weight: 700; }
+      &.has-entry { cursor: pointer; color: #333; font-weight: 600; &:hover { background: #ede9fe; } }
     }
     .cal-dots { display: flex; gap: 2px; justify-content: center; }
-    .cal-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; &.pink { background: #e91e63; } &.red { background: #c62828; } }
+    .cal-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; &.pink { background: #7c3aed; } &.red { background: #c62828; } }
 
     /* Popup */
     .popup-overlay {
@@ -287,8 +287,8 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
     .popup-answers { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.1rem; }
     /* daily popup answers */
     .pa { display: flex; gap: 8px; align-items: baseline; font-size: 0.85rem; flex-wrap: wrap; }
-    .pa.mine    .pa-who { color: #e91e63; }
-    .pa.partner .pa-who { color: #9c27b0; }
+    .pa.mine    .pa-who { color: #7c3aed; }
+    .pa.partner .pa-who { color: #6d28d9; }
     .pa-who { font-weight: 700; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; flex-shrink: 0; }
     .pa-text { color: #444; line-height: 1.4; }
 
@@ -297,20 +297,20 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
     .kr-col {
       border-radius: 14px; padding: 0.75rem 0.8rem;
       display: flex; flex-direction: column; gap: 0.55rem;
-      &.mine    { background: #fff0f5; border: 1.5px solid #fce4ec; }
+      &.mine    { background: #f5f3ff; border: 1.5px solid #ede9fe; }
       &.partner { background: #f5f0ff; border: 1.5px solid #ede7f6; }
     }
     .kr-name {
       font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
-      .mine &    { color: #e91e63; }
-      .partner & { color: #9c27b0; }
+      .mine &    { color: #7c3aed; }
+      .partner & { color: #6d28d9; }
     }
     .kr-block { display: flex; flex-direction: column; gap: 2px; }
     .kr-block.guess { padding-top: 0.45rem; border-top: 1px dashed #eee; }
     .kr-lbl { font-size: 0.62rem; color: #bbb; text-transform: uppercase; letter-spacing: 0.3px; font-weight: 600; }
     .kr-val { font-size: 0.84rem; color: #333; font-weight: 500; line-height: 1.3; }
     .kr-guess-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
-    .kr-badge { width: 18px; height: 18px; border-radius: 50%; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; background: #fce4ec; color: #e91e63; &.ok { background: #e8f5e9; color: #4caf50; } }
+    .kr-badge { width: 18px; height: 18px; border-radius: 50%; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; background: #ede9fe; color: #7c3aed; &.ok { background: #e8f5e9; color: #4caf50; } }
   `],
 })
 export class DailyQuestionComponent implements OnInit, OnDestroy {

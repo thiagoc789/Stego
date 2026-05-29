@@ -2,14 +2,14 @@
 <html lang="es">
   <head>
     <meta charset="utf-8" />
-    <title>Nosotros</title>
+    <title>Stego</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#e91e63" />
+    <meta name="theme-color" content="#2d1b69" />
     <!-- iOS PWA -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Nosotros" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Stego" />
     <link rel="apple-touch-icon" href="icons/icon-192x192.png" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <link rel="manifest" href="manifest.webmanifest" />
@@ -20,9 +20,82 @@
       rel="stylesheet"
     />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <style>
+      #splash {
+        position: fixed; inset: 0; z-index: 99999;
+        background: linear-gradient(135deg, #0f0a1e 0%, #1e1433 40%, #2d1b69 80%, #4a1d96 100%);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 0; font-family: Roboto, sans-serif;
+        transition: opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s;
+      }
+      #splash.hidden { opacity: 0; transform: scale(1.04); pointer-events: none; }
+      .splash-icon {
+        width: 90px; height: 90px; border-radius: 26px;
+        background: rgba(255,255,255,0.08);
+        border: 1.5px solid rgba(168,85,247,0.5);
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 1.4rem;
+        box-shadow: 0 0 40px rgba(124,58,237,0.4), 0 0 80px rgba(124,58,237,0.15);
+      }
+      .splash-icon svg { width: 54px; height: 54px; }
+      .splash-name {
+        font-size: 2.6rem; font-weight: 800; color: white;
+        letter-spacing: 6px; text-transform: uppercase; line-height: 1;
+        margin-bottom: 0.5rem;
+      }
+      .splash-sub {
+        font-size: 0.72rem; color: rgba(168,85,247,0.8);
+        letter-spacing: 3px; text-transform: uppercase; font-weight: 500;
+      }
+      .splash-dot {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: rgba(168,85,247,0.4); margin-top: 2rem;
+        animation: pulse-dot 1.4s ease-in-out infinite;
+      }
+      @keyframes pulse-dot {
+        0%, 100% { opacity: 0.3; transform: scale(0.8); }
+        50% { opacity: 1; transform: scale(1.2); }
+      }
+    </style>
   </head>
   <body>
+    <div id="splash">
+      <div class="splash-icon">
+        <svg viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- S for Santiago - left arc -->
+          <path d="M14 18 C14 14 17 11 21 11 C25 11 28 14 28 18 C28 22 14 24 14 28 C14 32 17 35 21 35" stroke="#a855f7" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <!-- Heart between -->
+          <path d="M27 25 C27 22 30 20 33 22 C36 20 39 22 39 25 C39 28 33 33 33 33 C33 33 27 28 27 25Z" fill="#ec4899" opacity="0.9"/>
+          <!-- S for Stephania - right arc (mirrored) -->
+          <path d="M40 19 C40 15 37 12 33 12 C29 12 26 15 26 19 C26 23 40 26 40 30 C40 34 37 38 33 38" stroke="#c4b5fd" stroke-width="3" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+      <div class="splash-name">Stego</div>
+      <div class="splash-sub">Stephania &amp; Santiago</div>
+      <div class="splash-dot"></div>
+    </div>
     <app-root></app-root>
     <noscript>Please enable JavaScript to continue using this application.</noscript>
+    <script>
+      // Hide splash once Angular bootstraps
+      (function() {
+        var splash = document.getElementById('splash');
+        var hidden = false;
+        function hideSplash() {
+          if (hidden) return;
+          hidden = true;
+          splash.classList.add('hidden');
+          setTimeout(function() { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 700);
+        }
+        // Fallback: hide after 3s max
+        setTimeout(hideSplash, 3000);
+        // Hide once app-root has content
+        var observer = new MutationObserver(function() {
+          var root = document.querySelector('app-root');
+          if (root && root.children.length > 0) { hideSplash(); observer.disconnect(); }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+      })();
+    </script>
   </body>
 </html>

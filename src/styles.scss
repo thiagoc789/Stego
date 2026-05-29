@@ -5,8 +5,8 @@ html {
   @include mat.theme(
     (
       color: (
-        primary: mat.$rose-palette,
-        tertiary: mat.$violet-palette,
+        primary: mat.$violet-palette,
+        tertiary: mat.$azure-palette,
       ),
       typography: Roboto,
       density: 0,
@@ -21,8 +21,7 @@ body {
   margin: 0;
   height: 100%;
 
-  /* Fondo romántico fijo que se ve detrás de todo */
-  background: linear-gradient(160deg, #fff0f5 0%, #fdf4ff 50%, #f5e8ff 100%);
+  background: linear-gradient(160deg, #f5f3ff 0%, #ede9fe 50%, #e9d5ff 100%);
   background-attachment: fixed;
 }
 
@@ -45,7 +44,7 @@ mat-card {
 /* Scrollbar sutil */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #f48fb1; border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #a78bfa; border-radius: 4px; }
 
 /* Prevent iOS auto-zoom on input focus (font-size < 16px triggers zoom) */
 input, textarea, select { font-size: 16px; touch-action: manipulation; }

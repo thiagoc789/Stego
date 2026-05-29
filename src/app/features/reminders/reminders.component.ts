@@ -156,7 +156,7 @@ import { Couple, Reminder } from '../../core/models/couple.model';
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: #e91e63;
+      color: #7c3aed;
     }
     .progress-count {
       font-size: 0.82rem;
@@ -172,7 +172,7 @@ import { Couple, Reminder } from '../../core/models/couple.model';
     .progress-bar-fill {
       height: 100%;
       border-radius: 10px;
-      background: linear-gradient(90deg, #e91e63, #9c27b0);
+      background: linear-gradient(90deg, #7c3aed, #6d28d9);
       transition: width 0.4s ease;
     }
     .all-done {
@@ -205,14 +205,14 @@ import { Couple, Reminder } from '../../core/models/couple.model';
     .clear-btn {
       border: none;
       background: transparent;
-      color: #e91e63;
+      color: #7c3aed;
       font-size: 0.78rem;
       font-weight: 600;
       cursor: pointer;
       font-family: inherit;
       padding: 0.2rem 0.5rem;
       border-radius: 6px;
-      &:hover { background: #fce4ec; }
+      &:hover { background: #ede9fe; }
     }
 
     /* ── Task row ── */
@@ -230,7 +230,7 @@ import { Couple, Reminder } from '../../core/models/couple.model';
     .checkbox {
       width: 24px; height: 24px;
       border-radius: 50%;
-      border: 2px solid #f48fb1;
+      border: 2px solid #c4b5fd;
       background: transparent;
       cursor: pointer;
       flex-shrink: 0;
@@ -238,10 +238,10 @@ import { Couple, Reminder } from '../../core/models/couple.model';
       align-items: center;
       justify-content: center;
       transition: all 0.18s ease;
-      &:hover { border-color: #e91e63; background: #fce4ec; }
+      &:hover { border-color: #7c3aed; background: #ede9fe; }
     }
     .checkbox.checked {
-      background: linear-gradient(135deg, #e91e63, #9c27b0);
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
       border-color: transparent;
       color: white;
       mat-icon { font-size: 0.9rem; height: 0.9rem; width: 0.9rem; }
@@ -269,8 +269,8 @@ import { Couple, Reminder } from '../../core/models/couple.model';
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.4px;
-      color: #9c27b0;
-      &.mine { color: #e91e63; }
+      color: #6d28d9;
+      &.mine { color: #7c3aed; }
     }
     .del-btn {
       width: 28px; height: 28px;
@@ -280,7 +280,7 @@ import { Couple, Reminder } from '../../core/models/couple.model';
       display: flex; align-items: center; justify-content: center;
       transition: all 0.15s ease;
       mat-icon { font-size: 1rem; height: 1rem; width: 1rem; }
-      &:hover { background: #fce4ec; color: #e91e63; }
+      &:hover { background: #ede9fe; color: #7c3aed; }
     }
 
     /* ── Empty ── */
@@ -291,7 +291,7 @@ import { Couple, Reminder } from '../../core/models/couple.model';
       flex-direction: column;
       align-items: center;
       gap: 0.4rem;
-      mat-icon { font-size: 2.5rem; height: 2.5rem; width: 2.5rem; color: #e0b0c8; }
+      mat-icon { font-size: 2.5rem; height: 2.5rem; width: 2.5rem; color: #c4b5fd; }
       p { margin: 0; font-size: 0.95rem; font-weight: 500; color: #bbb; }
       span { font-size: 0.8rem; color: #ccc; }
     }
@@ -300,34 +300,34 @@ import { Couple, Reminder } from '../../core/models/couple.model';
     .add-bar {
       background: white;
       border-radius: 18px;
-      border: 1.5px solid #f0d0dc;
+      border: 1.5px solid #ddd6fe;
       padding: 0.5rem 0.75rem 0.5rem 1rem;
       display: flex;
       gap: 0.6rem;
       align-items: center;
-      box-shadow: 0 3px 14px rgba(233,30,99,0.1);
+      box-shadow: 0 3px 14px rgba(124,58,237,0.1);
     }
     .add-input {
       flex: 1;
-      border: 1.5px solid #f0d0dc;
+      border: 1.5px solid #ddd6fe;
       border-radius: 24px;
       padding: 0.6rem 1rem;
       font-size: 0.9rem;
       font-family: inherit;
       outline: none;
-      background: #fffbfc;
+      background: #faf8ff;
       transition: border-color 0.2s;
-      &:focus { border-color: #e91e63; }
+      &:focus { border-color: #7c3aed; }
       &::placeholder { color: #ccc; }
     }
     .add-btn {
       width: 40px; height: 40px;
       border-radius: 50%; border: none;
-      background: linear-gradient(135deg, #e91e63, #9c27b0);
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
       color: white;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer;
-      box-shadow: 0 3px 10px rgba(233,30,99,0.35);
+      box-shadow: 0 3px 10px rgba(124,58,237,0.35);
       flex-shrink: 0;
       transition: transform 0.15s;
       mat-icon { font-size: 1.3rem; height: 1.3rem; width: 1.3rem; }

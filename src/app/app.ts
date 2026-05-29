@@ -78,8 +78,8 @@ import { APP_VERSION } from './version';
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: linear-gradient(135deg, #e91e63 0%, #ad1457 60%, #7b1fa2 100%);
-      box-shadow: 0 2px 12px rgba(233, 30, 99, 0.3);
+      background: linear-gradient(135deg, #1e1433 0%, #2d1b69 60%, #4a1d96 100%);
+      box-shadow: 0 2px 12px rgba(45,27,105,0.4);
     }
     .header-left {
       display: flex;
@@ -114,9 +114,9 @@ import { APP_VERSION } from './version';
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0;
       height: 64px;
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(18,12,35,0.97);
       backdrop-filter: blur(10px);
-      border-top: 1px solid rgba(233, 30, 99, 0.12);
+      border-top: 1px solid rgba(124,58,237,0.15);
       display: flex;
       align-items: center;
       justify-content: space-around;
@@ -125,14 +125,14 @@ import { APP_VERSION } from './version';
     }
     .bottom-nav a {
       display: flex; flex-direction: column; align-items: center;
-      gap: 2px; text-decoration: none; color: #bbb; font-size: 0.68rem;
+      gap: 2px; text-decoration: none; color: rgba(255,255,255,0.35); font-size: 0.68rem;
       padding: 0.5rem 1.2rem;
       border-radius: 12px;
       transition: all 0.2s ease;
     }
     .bottom-nav a.active {
-      color: #e91e63;
-      background: #fce4ec;
+      color: #a855f7;
+      background: rgba(168,85,247,0.2);
     }
     .bottom-nav a mat-icon { font-size: 1.3rem; height: 1.3rem; width: 1.3rem; }
   `],

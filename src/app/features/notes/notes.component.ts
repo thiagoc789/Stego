@@ -146,8 +146,8 @@ const CARD_COLORS = [
     .add-panel {
       position: relative; z-index: 20;
       background: white; border-radius: 16px;
-      box-shadow: 0 6px 28px rgba(233,30,99,0.15);
-      border: 1.5px solid #fce4ec;
+      box-shadow: 0 6px 28px rgba(124,58,237,0.15);
+      border: 1.5px solid #ede9fe;
       margin-bottom: 1.2rem; overflow: hidden;
       animation: slideDown 0.18s ease;
     }
@@ -173,11 +173,11 @@ const CARD_COLORS = [
     }
     .add-actions {
       display: flex; align-items: center;
-      padding: 0.5rem 0.75rem; border-top: 1px solid #fce4ec; gap: 0.5rem;
+      padding: 0.5rem 0.75rem; border-top: 1px solid #ede9fe; gap: 0.5rem;
     }
     .add-author-hint {
       flex: 1; display: flex; align-items: center; gap: 4px;
-      font-size: 0.75rem; color: #e91e63; font-weight: 600;
+      font-size: 0.75rem; color: #7c3aed; font-weight: 600;
       mat-icon { font-size: 0.9rem; height: 0.9rem; width: 0.9rem; }
     }
     .close-btn {
@@ -188,7 +188,7 @@ const CARD_COLORS = [
     }
     .save-btn {
       padding: 0.4rem 1rem; border-radius: 8px; border: none;
-      background: linear-gradient(135deg, #e91e63, #9c27b0);
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
       color: white; font-size: 0.85rem; font-weight: 600;
       cursor: pointer; font-family: inherit;
       &:disabled { background: #eee; color: #bbb; cursor: default; }
@@ -244,8 +244,8 @@ const CARD_COLORS = [
     }
     .card-author {
       font-size: 0.65rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.5px; color: #9c27b0;
-      &.mine { color: #e91e63; }
+      text-transform: uppercase; letter-spacing: 0.5px; color: #6d28d9;
+      &.mine { color: #7c3aed; }
     }
     .card-delete {
       width: 24px; height: 24px; border-radius: 50%;
@@ -254,14 +254,14 @@ const CARD_COLORS = [
       cursor: pointer; flex-shrink: 0; padding: 0;
       transition: background 0.15s, color 0.15s;
       mat-icon { font-size: 1rem; height: 1rem; width: 1rem; }
-      &:hover { background: rgba(233,30,99,0.1); color: #e91e63; }
+      &:hover { background: rgba(124,58,237,0.1); color: #7c3aed; }
     }
 
     /* ── Empty ── */
     .empty-state {
       text-align: center; padding: 4rem 1rem;
       display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
-      mat-icon { font-size: 3rem; height: 3rem; width: 3rem; color: #e0b0c8; }
+      mat-icon { font-size: 3rem; height: 3rem; width: 3rem; color: #c4b5fd; }
       p { margin: 0; font-size: 0.9rem; color: #ccc; }
     }
 
@@ -270,13 +270,13 @@ const CARD_COLORS = [
       position: fixed;
       bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 1.2rem); right: 1.2rem;
       width: 52px; height: 52px; border-radius: 50%; border: none;
-      background: linear-gradient(135deg, #e91e63, #9c27b0);
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
       color: white; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; box-shadow: 0 4px 18px rgba(233,30,99,0.45);
+      cursor: pointer; box-shadow: 0 4px 18px rgba(124,58,237,0.45);
       transition: transform 0.2s, box-shadow 0.2s; z-index: 30;
       mat-icon { font-size: 1.4rem; height: 1.4rem; width: 1.4rem; }
-      &:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(233,30,99,0.55); }
-      &.active { background: linear-gradient(135deg, #9c27b0, #e91e63); }
+      &:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(124,58,237,0.55); }
+      &.active { background: linear-gradient(135deg, #6d28d9, #7c3aed); }
     }
 
     /* ── Backdrop ── */

@@ -226,7 +226,7 @@ import { Couple, Photo } from '../../core/models/couple.model';
       text-transform: uppercase; letter-spacing: 0.5px;
       padding: 3px 9px; border-radius: 20px;
       backdrop-filter: blur(4px);
-      &.mine { background: rgba(233,30,99,0.65); }
+      &.mine { background: rgba(124,58,237,0.65); }
     }
 
     .card-body {
@@ -245,8 +245,8 @@ import { Couple, Photo } from '../../core/models/couple.model';
       font-size: 0.72rem; font-weight: 600; padding: 3px 9px;
       border-radius: 20px;
       mat-icon { font-size: 0.78rem; height: 0.78rem; width: 0.78rem; }
-      &.date { background: #f3e5f5; color: #7b1fa2; mat-icon { color: #9c27b0; } }
-      &.place { background: #fce4ec; color: #c2185b; mat-icon { color: #e91e63; } }
+      &.date { background: #ede9fe; color: #2e1065; mat-icon { color: #6d28d9; } }
+      &.place { background: #ede9fe; color: #5b21b6; mat-icon { color: #7c3aed; } }
     }
 
     /* ── Skeleton ── */
@@ -261,7 +261,7 @@ import { Couple, Photo } from '../../core/models/couple.model';
     .empty {
       text-align: center; padding: 5rem 1rem;
       display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
-      mat-icon { font-size: 3.5rem; height: 3.5rem; width: 3.5rem; color: #e0b0c8; }
+      mat-icon { font-size: 3.5rem; height: 3.5rem; width: 3.5rem; color: #c4b5fd; }
       p { margin: 0; font-size: 1rem; font-weight: 500; color: #bbb; }
       span { font-size: 0.82rem; color: #ccc; }
     }
@@ -270,9 +270,9 @@ import { Couple, Photo } from '../../core/models/couple.model';
     .fab {
       position: fixed; bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 1rem); right: 1rem;
       width: 52px; height: 52px; border-radius: 50%; border: none;
-      background: linear-gradient(135deg, #e91e63, #9c27b0);
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
       color: white; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; box-shadow: 0 4px 18px rgba(233,30,99,0.45);
+      cursor: pointer; box-shadow: 0 4px 18px rgba(124,58,237,0.45);
       transition: transform 0.2s, opacity 0.2s; z-index: 30;
       mat-icon { font-size: 1.4rem; height: 1.4rem; width: 1.4rem; }
       &:hover:not(:disabled) { transform: scale(1.08); }
@@ -283,10 +283,10 @@ import { Couple, Photo } from '../../core/models/couple.model';
     /* ── Progress bar ── */
     .progress-bar-wrap {
       position: fixed; top: 60px; left: 0; right: 0;
-      height: 3px; background: #fce4ec; z-index: 50;
+      height: 3px; background: #ede9fe; z-index: 50;
     }
     .progress-bar-fill {
-      height: 100%; background: linear-gradient(90deg, #e91e63, #9c27b0); transition: width 0.2s;
+      height: 100%; background: linear-gradient(90deg, #7c3aed, #6d28d9); transition: width 0.2s;
     }
 
     /* ── Upload dialog (centered modal) ── */
@@ -309,17 +309,17 @@ import { Couple, Photo } from '../../core/models/couple.model';
     }
     .dialog-title {
       margin: 0; font-size: 1.05rem; font-weight: 700; color: #1a1a1a;
-      padding-bottom: 0.6rem; border-bottom: 1.5px solid #fce4ec;
+      padding-bottom: 0.6rem; border-bottom: 1.5px solid #ede9fe;
     }
     .field {
       display: flex; flex-direction: column; gap: 0.3rem;
-      label { font-size: 0.7rem; font-weight: 700; color: #e91e63; text-transform: uppercase; letter-spacing: 0.5px; }
+      label { font-size: 0.7rem; font-weight: 700; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.5px; }
     }
     .field-input {
-      width: 100%; border: 1.5px solid #f0d0dc; border-radius: 12px;
+      width: 100%; border: 1.5px solid #ddd6fe; border-radius: 12px;
       padding: 0.6rem 0.85rem; font-size: 0.9rem; font-family: inherit;
-      outline: none; background: #fffbfc; resize: none; box-sizing: border-box;
-      &:focus { border-color: #e91e63; }
+      outline: none; background: #faf8ff; resize: none; box-sizing: border-box;
+      &:focus { border-color: #7c3aed; }
       &::placeholder { color: #ccc; }
       &[type="date"] { color: #555; }
     }
@@ -327,22 +327,22 @@ import { Couple, Photo } from '../../core/models/couple.model';
       position: relative;
       mat-icon {
         position: absolute; left: 0.7rem; top: 50%; transform: translateY(-50%);
-        font-size: 1rem; height: 1rem; width: 1rem; color: #e91e63; pointer-events: none;
+        font-size: 1rem; height: 1rem; width: 1rem; color: #7c3aed; pointer-events: none;
       }
       .field-input { padding-left: 2.2rem; }
     }
     .dialog-actions { display: flex; gap: 0.6rem; padding-top: 0.2rem; }
     .btn-cancel {
-      flex: 1; padding: 0.7rem; border-radius: 12px; border: 1.5px solid #f0d0dc;
+      flex: 1; padding: 0.7rem; border-radius: 12px; border: 1.5px solid #ddd6fe;
       background: transparent; color: #999; font-size: 0.88rem;
       cursor: pointer; font-family: inherit;
     }
     .btn-upload {
       flex: 2; padding: 0.7rem; border-radius: 12px; border: none;
-      background: linear-gradient(135deg, #e91e63, #9c27b0);
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
       color: white; font-size: 0.88rem; font-weight: 600;
       cursor: pointer; font-family: inherit;
-      box-shadow: 0 3px 12px rgba(233,30,99,0.3);
+      box-shadow: 0 3px 12px rgba(124,58,237,0.3);
     }
 
     /* ── Full-screen viewer ── */
@@ -373,7 +373,7 @@ import { Couple, Photo } from '../../core/models/couple.model';
     .viewer-who {
       font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.5px; color: rgba(255,255,255,0.55);
-      &.mine { color: #f48fb1; }
+      &.mine { color: #c4b5fd; }
     }
     .viewer-btns { display: flex; gap: 0.3rem; }
     .vbtn {
@@ -383,8 +383,8 @@ import { Couple, Photo } from '../../core/models/couple.model';
       cursor: pointer; transition: background 0.15s;
       svg { width: 15px; height: 15px; }
       &:hover { background: rgba(255,255,255,0.2); }
-      &.red { color: #f48fb1; background: rgba(233,30,99,0.15); }
-      &.red:hover { background: rgba(233,30,99,0.3); }
+      &.red { color: #c4b5fd; background: rgba(124,58,237,0.15); }
+      &.red:hover { background: rgba(124,58,237,0.3); }
     }
 
     .viewer-img {
@@ -411,7 +411,7 @@ import { Couple, Photo } from '../../core/models/couple.model';
       display: inline-flex; align-items: center; gap: 4px;
       background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7);
       font-size: 0.73rem; padding: 4px 10px; border-radius: 20px;
-      mat-icon { font-size: 0.78rem; height: 0.78rem; width: 0.78rem; color: #f48fb1; }
+      mat-icon { font-size: 0.78rem; height: 0.78rem; width: 0.78rem; color: #c4b5fd; }
     }
 
   `],

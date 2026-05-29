@@ -31,6 +31,17 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
           </div>
         </div>
 
+        <!-- Streak -->
+        @if (streak() > 0) {
+          <div class="streak-card">
+            <span class="streak-fire">🔥</span>
+            <div class="streak-info">
+              <span class="streak-num">{{ streak() }} {{ streak() === 1 ? 'día' : 'días' }}</span>
+              <span class="streak-lbl">seguidos hasta hoy</span>
+            </div>
+          </div>
+        }
+
         <!-- Calendar -->
         <div class="cal-card">
           <div class="cal-header">
@@ -104,14 +115,14 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
 
     /* Stats */
     .stats-card {
-      background: linear-gradient(135deg, #e91e63 0%, #ad1457 60%, #7b1fa2 100%);
+      background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 60%, #2e1065 100%);
       border-radius: 18px;
       padding: 1.2rem 1.5rem;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 2rem;
-      box-shadow: 0 6px 20px rgba(233,30,99,0.3);
+      box-shadow: 0 6px 20px rgba(124,58,237,0.3);
     }
     .stat {
       display: flex; flex-direction: column; align-items: center; gap: 2px;
@@ -136,9 +147,9 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
       display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem;
     }
     .cal-nav {
-      background: none; border: none; font-size: 1.5rem; color: #e91e63;
+      background: none; border: none; font-size: 1.5rem; color: #7c3aed;
       cursor: pointer; padding: 0.1rem 0.5rem; border-radius: 8px; line-height: 1;
-      &:hover { background: #fce4ec; }
+      &:hover { background: #ede9fe; }
     }
     .cal-title {
       font-size: 0.88rem; font-weight: 700; color: #333; text-transform: capitalize;
@@ -157,12 +168,25 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
       gap: 1px;
       transition: background 0.15s, transform 0.1s;
       &.empty { cursor: default; }
-      &.today { background: #fce4ec; color: #e91e63; font-weight: 700; }
-      &.marked { background: #fff0f5; color: #333; font-weight: 600; }
+      &.today { background: #ede9fe; color: #7c3aed; font-weight: 700; }
+      &.marked { background: #f5f3ff; color: #333; font-weight: 600; }
       &.future { cursor: default; opacity: 0.3; }
-      &:not(.empty):not(.future):hover { background: #fff0f5; transform: scale(1.08); }
+      &:not(.empty):not(.future):hover { background: #f5f3ff; transform: scale(1.08); }
     }
     .heart-dot { font-size: 0.45rem; line-height: 1; }
+
+    /* Streak */
+    .streak-card {
+      background: linear-gradient(135deg, #1e1433 0%, #3b0764 100%);
+      border-radius: 16px;
+      padding: 0.85rem 1.2rem;
+      display: flex; align-items: center; gap: 0.9rem;
+      box-shadow: 0 4px 16px rgba(124,58,237,0.25);
+    }
+    .streak-fire { font-size: 1.8rem; }
+    .streak-info { display: flex; flex-direction: column; }
+    .streak-num { font-size: 1.25rem; font-weight: 800; color: white; line-height: 1.1; }
+    .streak-lbl { font-size: 0.68rem; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
 
     /* Recent */
     .recent-card {
@@ -208,6 +232,22 @@ export class IntimacyComponent implements OnInit {
   totalCount = computed(() => this.days().length);
 
   recentDays = computed(() => this.days().slice(0, 8));
+
+  streak = computed(() => {
+    const marked = this.markedSet();
+    const today = this.coupleService.todayKey();
+    let count = 0;
+    const col = new Date(Date.now() - 5 * 3_600_000);
+    if (!marked.has(today)) {
+      col.setUTCDate(col.getUTCDate() - 1);
+    }
+    for (let i = 0; i < 365; i++) {
+      const ds = `${col.getUTCFullYear()}-${String(col.getUTCMonth()+1).padStart(2,'0')}-${String(col.getUTCDate()).padStart(2,'0')}`;
+      if (marked.has(ds)) { count++; col.setUTCDate(col.getUTCDate() - 1); }
+      else break;
+    }
+    return count;
+  });
 
   calMonthLabel = computed(() =>
     new Date(this.calYear(), this.calMonth(), 1)
