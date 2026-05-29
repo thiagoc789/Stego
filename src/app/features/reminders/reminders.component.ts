@@ -98,19 +98,19 @@ import { Couple, Reminder } from '../../core/models/couple.model';
         </div>
       }
 
-    </div>
+      <!-- Add task bar inside page flow so iOS keyboard positions correctly -->
+      <div class="add-bar">
+        <input
+          class="add-input"
+          [(ngModel)]="newTitle"
+          placeholder="Nueva tarea..."
+          (keydown.enter)="addReminder()"
+        />
+        <button class="add-btn" (click)="addReminder()" [disabled]="!newTitle.trim()">
+          <mat-icon>add</mat-icon>
+        </button>
+      </div>
 
-    <!-- Add task bar -->
-    <div class="add-bar">
-      <input
-        class="add-input"
-        [(ngModel)]="newTitle"
-        placeholder="Nueva tarea..."
-        (keydown.enter)="addReminder()"
-      />
-      <button class="add-btn" (click)="addReminder()" [disabled]="!newTitle.trim()">
-        <mat-icon>add</mat-icon>
-      </button>
     </div>
   `,
   styles: [`
@@ -120,7 +120,7 @@ import { Couple, Reminder } from '../../core/models/couple.model';
       padding: 1rem;
       max-width: 480px;
       margin: 0 auto;
-      padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
@@ -298,17 +298,14 @@ import { Couple, Reminder } from '../../core/models/couple.model';
 
     /* ── Add bar ── */
     .add-bar {
-      position: fixed;
-      bottom: calc(64px + env(safe-area-inset-bottom, 0px));
-      left: 0; right: 0;
       background: white;
-      border-top: 1px solid #f0f0f0;
-      padding: 0.6rem 1rem;
+      border-radius: 18px;
+      border: 1.5px solid #f0d0dc;
+      padding: 0.5rem 0.75rem 0.5rem 1rem;
       display: flex;
       gap: 0.6rem;
       align-items: center;
-      box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
-      z-index: 20;
+      box-shadow: 0 3px 14px rgba(233,30,99,0.1);
     }
     .add-input {
       flex: 1;
