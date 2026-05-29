@@ -5,7 +5,7 @@ import { CoupleService } from '../../core/services/couple.service';
 import { AuthService } from '../../core/services/auth.service';
 import { IntimacyDay } from '../../core/models/couple.model';
 
-interface CalCell { day: number | null; dateStr: string | null; isToday: boolean; isMarked: boolean; isFuture: boolean; }
+interface CalCell { day: number | null; dateStr: string | null; isToday: boolean; isMarked: boolean; isFuture: boolean; count: number; }
 
 @Component({
   selector: 'app-intimacy',
@@ -61,15 +61,38 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
                   [class.today]="cell.isToday"
                   [class.marked]="cell.isMarked"
                   [class.future]="cell.isFuture"
+                  [class.selected]="selectedCell()?.dateStr === cell.dateStr"
                   [disabled]="cell.isFuture"
-                  (click)="!cell.isFuture && toggleDay(cell.dateStr!)">
+                  (click)="tapDay(cell)">
                   {{ cell.day }}
-                  @if (cell.isMarked) { <span class="fire-dot">🔥</span> }
+                  @if (cell.isMarked) {
+                    <span class="fire-dot">
+                      @if (cell.count > 1) { <span class="count-badge">{{ cell.count }}</span> }
+                      🔥
+                    </span>
+                  }
                 </button>
               }
             }
           </div>
         </div>
+
+        <!-- Action panel for selected day -->
+        @if (selectedCell()) {
+          <div class="action-card">
+            <div class="action-top">
+              <div class="action-info">
+                <span class="action-date">{{ formatDate(selectedCell()!.dateStr!) }}</span>
+                <span class="action-count">🔥 {{ selectedCell()!.count }} {{ selectedCell()!.count === 1 ? 'vez' : 'veces' }} este día</span>
+              </div>
+              <button class="action-close" (click)="selectedCell.set(null)">✕</button>
+            </div>
+            <div class="action-btns">
+              <button class="btn-add" (click)="addToSelected()">+ Agregar otro</button>
+              <button class="btn-remove" (click)="removeFromSelected()">− Quitar uno</button>
+            </div>
+          </div>
+        }
 
         <!-- Recent list -->
         @if (recentDays().length > 0) {
@@ -77,7 +100,7 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
             <p class="recent-label">Últimos momentos</p>
             @for (d of recentDays(); track d.date) {
               <div class="recent-row">
-                <span class="recent-icon">🔥</span>
+                <span class="recent-icon">🔥{{ (d.count ?? 1) > 1 ? ' ×' + (d.count ?? 1) : '' }}</span>
                 <span class="recent-date">{{ formatDate(d.date) }}</span>
               </div>
             }
@@ -124,16 +147,9 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
       gap: 2rem;
       box-shadow: 0 6px 24px rgba(153,27,27,0.45);
     }
-    .stat {
-      display: flex; flex-direction: column; align-items: center; gap: 2px;
-    }
-    .stat-num {
-      font-size: 2rem; font-weight: 800; color: white; line-height: 1;
-    }
-    .stat-lbl {
-      font-size: 0.68rem; color: rgba(255,255,255,0.65);
-      text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
-    }
+    .stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .stat-num { font-size: 2rem; font-weight: 800; color: white; line-height: 1; }
+    .stat-lbl { font-size: 0.68rem; color: rgba(255,255,255,0.65); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
     .stat-fire { font-size: 2rem; }
 
     /* Calendar */
@@ -143,24 +159,15 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
       padding: 1rem;
       box-shadow: 0 3px 14px rgba(0,0,0,0.06);
     }
-    .cal-header {
-      display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem;
-    }
+    .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem; }
     .cal-nav {
       background: none; border: none; font-size: 1.5rem; color: #9f1239;
       cursor: pointer; padding: 0.1rem 0.5rem; border-radius: 8px; line-height: 1;
       &:hover { background: #fff1f2; }
     }
-    .cal-title {
-      font-size: 0.88rem; font-weight: 700; color: #333; text-transform: capitalize;
-    }
-    .cal-grid {
-      display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
-    }
-    .cal-weekday {
-      text-align: center; font-size: 0.62rem; font-weight: 700;
-      color: #ccc; text-transform: uppercase; padding: 0.3rem 0;
-    }
+    .cal-title { font-size: 0.88rem; font-weight: 700; color: #333; text-transform: capitalize; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cal-weekday { text-align: center; font-size: 0.62rem; font-weight: 700; color: #ccc; text-transform: uppercase; padding: 0.3rem 0; }
     .cal-cell {
       aspect-ratio: 1; border-radius: 50%; border: none; background: none;
       font-size: 0.78rem; color: #aaa; cursor: pointer;
@@ -170,10 +177,12 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
       &.empty { cursor: default; }
       &.today { background: #ddd6fe; color: #5b21b6; font-weight: 800; box-shadow: 0 0 0 2px #7c3aed; }
       &.marked { background: #ffe4e6; color: #be123c; font-weight: 700; }
+      &.selected { background: #fecdd3; box-shadow: 0 0 0 2px #e11d48; }
       &.future { cursor: default; opacity: 0.3; }
       &:not(.empty):not(.future):hover { background: #ffe4e6; transform: scale(1.08); }
     }
-    .fire-dot { font-size: 0.72rem; line-height: 1; }
+    .fire-dot { font-size: 0.65rem; line-height: 1; display: flex; align-items: center; gap: 1px; }
+    .count-badge { font-size: 0.58rem; font-weight: 800; color: #be123c; }
 
     /* Streak */
     .streak-card {
@@ -188,6 +197,41 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
     .streak-num { font-size: 1.1rem; font-weight: 800; color: white; line-height: 1.2; }
     .streak-lbl { font-size: 0.68rem; color: rgba(255,200,150,0.7); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
 
+    /* Action panel */
+    .action-card {
+      background: white; border-radius: 18px;
+      padding: 1rem 1.1rem;
+      box-shadow: 0 4px 18px rgba(190,18,60,0.15);
+      border: 1.5px solid #fecdd3;
+      display: flex; flex-direction: column; gap: 0.75rem;
+      animation: slideIn 0.18s ease;
+    }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+    .action-top { display: flex; align-items: flex-start; justify-content: space-between; }
+    .action-info { display: flex; flex-direction: column; gap: 2px; }
+    .action-date { font-size: 0.72rem; color: #aaa; text-transform: capitalize; }
+    .action-count { font-size: 1rem; font-weight: 700; color: #be123c; }
+    .action-close {
+      background: none; border: none; font-size: 0.85rem; color: #ccc;
+      cursor: pointer; padding: 2px 6px; border-radius: 6px;
+      &:hover { background: #f5f5f5; color: #888; }
+    }
+    .action-btns { display: flex; gap: 0.6rem; }
+    .btn-add {
+      flex: 1; padding: 0.55rem; border-radius: 12px; border: none;
+      background: linear-gradient(135deg, #be123c, #9f1239);
+      color: white; font-size: 0.85rem; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      &:hover { opacity: 0.9; }
+    }
+    .btn-remove {
+      flex: 1; padding: 0.55rem; border-radius: 12px;
+      border: 1.5px solid #fecdd3; background: white;
+      color: #be123c; font-size: 0.85rem; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+      &:hover { background: #fff1f2; }
+    }
+
     /* Recent */
     .recent-card {
       background: white; border-radius: 18px;
@@ -195,16 +239,13 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
       box-shadow: 0 3px 14px rgba(0,0,0,0.06);
       display: flex; flex-direction: column; gap: 0.3rem;
     }
-    .recent-label {
-      font-size: 0.68rem; font-weight: 700; color: #f87171;
-      text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 0.4rem;
-    }
+    .recent-label { font-size: 0.68rem; font-weight: 700; color: #f87171; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 0.4rem; }
     .recent-row {
       display: flex; align-items: center; gap: 0.6rem;
       padding: 0.4rem 0; border-bottom: 1px solid #fafafa;
       &:last-child { border-bottom: none; }
     }
-    .recent-icon { font-size: 0.9rem; }
+    .recent-icon { font-size: 0.9rem; font-weight: 700; color: #be123c; }
     .recent-date { font-size: 0.85rem; color: #555; }
   `],
 })
@@ -213,23 +254,32 @@ export class IntimacyComponent implements OnInit {
   private authService   = inject(AuthService);
   private destroyRef    = inject(DestroyRef);
 
-  days    = signal<IntimacyDay[]>([]);
-  loading = signal(true);
+  days     = signal<IntimacyDay[]>([]);
+  loading  = signal(true);
   calYear  = signal(new Date().getFullYear());
   calMonth = signal(new Date().getMonth());
+  selectedCell = signal<CalCell | null>(null);
 
   private coupleId = '';
   private myUid    = '';
 
   markedSet = computed(() => new Set(this.days().map(d => d.date)));
 
+  daysMap = computed(() => {
+    const map = new Map<string, number>();
+    this.days().forEach(d => map.set(d.date, d.count ?? 1));
+    return map;
+  });
+
   monthCount = computed(() => {
     const y = this.calYear(), m = this.calMonth();
     const prefix = `${y}-${String(m + 1).padStart(2, '0')}`;
-    return this.days().filter(d => d.date.startsWith(prefix)).length;
+    return this.days()
+      .filter(d => d.date.startsWith(prefix))
+      .reduce((sum, d) => sum + (d.count ?? 1), 0);
   });
 
-  totalCount = computed(() => this.days().length);
+  totalCount = computed(() => this.days().reduce((sum, d) => sum + (d.count ?? 1), 0));
 
   recentDays = computed(() => this.days().slice(0, 8));
 
@@ -261,17 +311,17 @@ export class IntimacyComponent implements OnInit {
     const daysInM  = new Date(y, m + 1, 0).getDate();
     const today    = this.coupleService.todayKey();
     const marked   = this.markedSet();
+    const daysMap  = this.daysMap();
     const cells: CalCell[] = [];
-    for (let i = 0; i < offset; i++) cells.push({ day: null, dateStr: null, isToday: false, isMarked: false, isFuture: false });
+    for (let i = 0; i < offset; i++) cells.push({ day: null, dateStr: null, isToday: false, isMarked: false, isFuture: false, count: 0 });
     for (let d = 1; d <= daysInM; d++) {
       const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      cells.push({ day: d, dateStr: ds, isToday: ds === today, isMarked: marked.has(ds), isFuture: ds > today });
+      cells.push({ day: d, dateStr: ds, isToday: ds === today, isMarked: marked.has(ds), isFuture: ds > today, count: daysMap.get(ds) ?? 0 });
     }
     return cells;
   });
 
   ngOnInit() {
-    // Safety: stop showing skeleton after 8s even if Firestore never responds
     setTimeout(() => this.loading.set(false), 8000);
 
     this.authService.currentUser$.pipe(
@@ -296,8 +346,27 @@ export class IntimacyComponent implements OnInit {
     });
   }
 
-  async toggleDay(dateStr: string) {
-    await this.coupleService.toggleIntimacyDay(this.coupleId, dateStr, this.myUid);
+  tapDay(cell: CalCell) {
+    if (cell.isFuture || !cell.dateStr) return;
+    if (cell.isMarked) {
+      this.selectedCell.set(cell);
+    } else {
+      this.coupleService.addIntimacyMomento(this.coupleId, cell.dateStr, this.myUid);
+    }
+  }
+
+  async addToSelected() {
+    const cell = this.selectedCell();
+    if (!cell?.dateStr) return;
+    this.selectedCell.set(null);
+    await this.coupleService.addIntimacyMomento(this.coupleId, cell.dateStr, this.myUid);
+  }
+
+  async removeFromSelected() {
+    const cell = this.selectedCell();
+    if (!cell?.dateStr) return;
+    this.selectedCell.set(null);
+    await this.coupleService.removeIntimacyMomento(this.coupleId, cell.dateStr);
   }
 
   prevMonth() {

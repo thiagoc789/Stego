@@ -59,4 +59,5 @@ export interface IntimacyDay {
   date: string;
   markedByUid: string;
   markedAt: any;
+  count?: number;
 }

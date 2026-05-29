@@ -246,12 +246,30 @@ export class CoupleService {
   }
 
   async toggleIntimacyDay(coupleId: string, date: string, uid: string): Promise<void> {
+    await this.addIntimacyMomento(coupleId, date, uid);
+  }
+
+  async addIntimacyMomento(coupleId: string, date: string, uid: string): Promise<void> {
     const ref = doc(this.firestore, `couples/${coupleId}/intimacy/${date}`);
     const snap = await getDoc(ref);
     if (snap.exists()) {
+      const current = snap.data() as IntimacyDay;
+      await updateDoc(ref, { count: (current.count ?? 1) + 1, markedAt: new Date() });
+    } else {
+      await setDoc(ref, { date, markedByUid: uid, markedAt: new Date(), count: 1 });
+    }
+  }
+
+  async removeIntimacyMomento(coupleId: string, date: string): Promise<void> {
+    const ref = doc(this.firestore, `couples/${coupleId}/intimacy/${date}`);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return;
+    const current = snap.data() as IntimacyDay;
+    const count = current.count ?? 1;
+    if (count <= 1) {
       await deleteDoc(ref);
     } else {
-      await setDoc(ref, { date, markedByUid: uid, markedAt: new Date() } satisfies IntimacyDay);
+      await updateDoc(ref, { count: count - 1 });
     }
   }
 
