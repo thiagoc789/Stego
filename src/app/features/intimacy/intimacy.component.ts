@@ -24,7 +24,7 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
             <span class="stat-num">{{ monthCount() }}</span>
             <span class="stat-lbl">este mes</span>
           </div>
-          <div class="stat-heart">❤️</div>
+          <div class="stat-fire">🔥</div>
           <div class="stat">
             <span class="stat-num">{{ totalCount() }}</span>
             <span class="stat-lbl">en total</span>
@@ -36,8 +36,8 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
           <div class="streak-card">
             <span class="streak-fire">🔥</span>
             <div class="streak-info">
-              <span class="streak-num">{{ streak() }} {{ streak() === 1 ? 'día' : 'días' }}</span>
-              <span class="streak-lbl">seguidos hasta hoy</span>
+              <span class="streak-num">{{ streak() }} {{ streak() === 1 ? 'noche' : 'noches' }} seguidas</span>
+              <span class="streak-lbl">sin apagar el fuego 🌙</span>
             </div>
           </div>
         }
@@ -64,7 +64,7 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
                   [disabled]="cell.isFuture"
                   (click)="!cell.isFuture && toggleDay(cell.dateStr!)">
                   {{ cell.day }}
-                  @if (cell.isMarked) { <span class="heart-dot">❤️</span> }
+                  @if (cell.isMarked) { <span class="fire-dot">🔥</span> }
                 </button>
               }
             }
@@ -74,10 +74,10 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
         <!-- Recent list -->
         @if (recentDays().length > 0) {
           <div class="recent-card">
-            <p class="recent-label">Últimos momentos</p>
+            <p class="recent-label">Últimas llamas</p>
             @for (d of recentDays(); track d.date) {
               <div class="recent-row">
-                <span class="recent-heart">❤️</span>
+                <span class="recent-icon">🔥</span>
                 <span class="recent-date">{{ formatDate(d.date) }}</span>
               </div>
             }
@@ -115,14 +115,14 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
 
     /* Stats */
     .stats-card {
-      background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 60%, #2e1065 100%);
+      background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 50%, #991b1b 100%);
       border-radius: 18px;
       padding: 1.2rem 1.5rem;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 2rem;
-      box-shadow: 0 6px 20px rgba(124,58,237,0.3);
+      box-shadow: 0 6px 24px rgba(153,27,27,0.45);
     }
     .stat {
       display: flex; flex-direction: column; align-items: center; gap: 2px;
@@ -131,10 +131,10 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
       font-size: 2rem; font-weight: 800; color: white; line-height: 1;
     }
     .stat-lbl {
-      font-size: 0.68rem; color: rgba(255,255,255,0.7);
+      font-size: 0.68rem; color: rgba(255,255,255,0.65);
       text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
     }
-    .stat-heart { font-size: 2rem; }
+    .stat-fire { font-size: 2rem; }
 
     /* Calendar */
     .cal-card {
@@ -147,9 +147,9 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
       display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem;
     }
     .cal-nav {
-      background: none; border: none; font-size: 1.5rem; color: #7c3aed;
+      background: none; border: none; font-size: 1.5rem; color: #9f1239;
       cursor: pointer; padding: 0.1rem 0.5rem; border-radius: 8px; line-height: 1;
-      &:hover { background: #ede9fe; }
+      &:hover { background: #fff1f2; }
     }
     .cal-title {
       font-size: 0.88rem; font-weight: 700; color: #333; text-transform: capitalize;
@@ -169,24 +169,24 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
       transition: background 0.15s, transform 0.1s;
       &.empty { cursor: default; }
       &.today { background: #5b21b6; color: white; font-weight: 800; }
-      &.marked { background: #ede9fe; color: #5b21b6; font-weight: 600; }
+      &.marked { background: #fff1f2; color: #9f1239; font-weight: 600; }
       &.future { cursor: default; opacity: 0.3; }
-      &:not(.empty):not(.future):hover { background: #f5f3ff; transform: scale(1.08); }
+      &:not(.empty):not(.future):hover { background: #fff1f2; transform: scale(1.08); }
     }
-    .heart-dot { font-size: 0.45rem; line-height: 1; }
+    .fire-dot { font-size: 0.5rem; line-height: 1; }
 
     /* Streak */
     .streak-card {
-      background: linear-gradient(135deg, #1e1433 0%, #3b0764 100%);
+      background: linear-gradient(135deg, #1c0202 0%, #450a0a 60%, #7f1d1d 100%);
       border-radius: 16px;
       padding: 0.85rem 1.2rem;
       display: flex; align-items: center; gap: 0.9rem;
-      box-shadow: 0 4px 16px rgba(124,58,237,0.25);
+      box-shadow: 0 4px 18px rgba(153,27,27,0.4);
     }
     .streak-fire { font-size: 1.8rem; }
     .streak-info { display: flex; flex-direction: column; }
-    .streak-num { font-size: 1.25rem; font-weight: 800; color: white; line-height: 1.1; }
-    .streak-lbl { font-size: 0.68rem; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+    .streak-num { font-size: 1.1rem; font-weight: 800; color: white; line-height: 1.2; }
+    .streak-lbl { font-size: 0.68rem; color: rgba(255,200,150,0.7); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
 
     /* Recent */
     .recent-card {
@@ -196,7 +196,7 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
       display: flex; flex-direction: column; gap: 0.3rem;
     }
     .recent-label {
-      font-size: 0.68rem; font-weight: 700; color: #ccc;
+      font-size: 0.68rem; font-weight: 700; color: #f87171;
       text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 0.4rem;
     }
     .recent-row {
@@ -204,7 +204,7 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
       padding: 0.4rem 0; border-bottom: 1px solid #fafafa;
       &:last-child { border-bottom: none; }
     }
-    .recent-heart { font-size: 0.9rem; }
+    .recent-icon { font-size: 0.9rem; }
     .recent-date { font-size: 0.85rem; color: #555; }
   `],
 })

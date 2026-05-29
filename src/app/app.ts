@@ -57,8 +57,8 @@ import { APP_VERSION } from './version';
               <span>Por hacer</span>
             </a>
             <a routerLink="/nosotros" routerLinkActive="active">
-              <mat-icon>spa</mat-icon>
-              <span>Nosotros</span>
+              <mat-icon>local_fire_department</mat-icon>
+              <span>Llamas</span>
             </a>
           </nav>
         </div>

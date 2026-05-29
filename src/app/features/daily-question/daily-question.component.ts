@@ -181,7 +181,7 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
   `,
   styles: [`
     .daily-page {
-      padding: 1.2rem 1.2rem calc(2rem + env(safe-area-inset-bottom, 0px));
+      padding: 1.2rem 1.2rem calc(7rem + env(safe-area-inset-bottom, 0px));
       max-width: 480px;
       margin: 0 auto;
       display: flex;
