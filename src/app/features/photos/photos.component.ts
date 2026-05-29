@@ -9,8 +9,6 @@ import { CoupleService } from '../../core/services/couple.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Couple, Photo } from '../../core/models/couple.model';
 
-const EMOJIS = ['❤️', '😂', '😍', '🥰', '👏'];
-
 @Component({
   selector: 'app-photos',
   standalone: true,
@@ -47,9 +45,6 @@ const EMOJIS = ['❤️', '😂', '😍', '🥰', '👏'];
               <div class="card-body">
                 @if (p.caption) {
                   <p class="card-caption">{{ p.caption }}</p>
-                }
-                @if (photoReactionSummary(p)) {
-                  <p class="card-reaction-summary">{{ photoReactionSummary(p) }}</p>
                 }
                 <div class="card-tags">
                   @if (p.memoryDate) {
@@ -157,20 +152,6 @@ const EMOJIS = ['❤️', '😂', '😍', '🥰', '👏'];
           <!-- Image -->
           <div class="viewer-img">
             <img [src]="openedPhoto()!.url" [alt]="openedPhoto()!.caption || 'foto'" />
-          </div>
-
-          <!-- Reactions -->
-          <div class="reaction-bar">
-            @for (e of EMOJIS; track e) {
-              <button class="reaction-btn"
-                [class.selected]="openedPhoto()!.reactions?.[myUid] === e"
-                (click)="reactPhoto(openedPhoto()!, e)">
-                {{ e }}
-                @if (photoReactionCount(openedPhoto()!, e) > 0) {
-                  <span class="reaction-count">{{ photoReactionCount(openedPhoto()!, e) }}</span>
-                }
-              </button>
-            }
           </div>
 
           <!-- Info -->
@@ -433,29 +414,9 @@ const EMOJIS = ['❤️', '😂', '😍', '🥰', '👏'];
       mat-icon { font-size: 0.78rem; height: 0.78rem; width: 0.78rem; color: #f48fb1; }
     }
 
-    /* ── Reactions in viewer ── */
-    .reaction-bar {
-      display: flex; gap: 0.4rem; flex-wrap: wrap;
-      padding: 0.6rem 1rem;
-      background: rgba(255,255,255,0.05);
-      border-top: 1px solid rgba(255,255,255,0.07);
-      flex-shrink: 0;
-    }
-    .reaction-btn {
-      display: inline-flex; align-items: center; gap: 3px;
-      padding: 5px 10px; border-radius: 20px; border: 1.5px solid rgba(255,255,255,0.15);
-      background: rgba(255,255,255,0.08); font-size: 0.9rem; cursor: pointer;
-      color: white; font-family: inherit; transition: all 0.15s;
-      &.selected { background: rgba(233,30,99,0.3); border-color: #f48fb1; }
-      &:hover { background: rgba(255,255,255,0.15); }
-    }
-    .reaction-count { font-size: 0.72rem; font-weight: 700; color: #f48fb1; }
-
-    .card-reaction-summary { margin: 0 0 0.2rem; font-size: 0.85rem; letter-spacing: 2px; }
   `],
 })
 export class PhotosComponent implements OnInit {
-  readonly EMOJIS = EMOJIS;
   private photoService  = inject(PhotoService);
   private coupleService = inject(CoupleService);
   private authService   = inject(AuthService);
@@ -545,21 +506,5 @@ export class PhotosComponent implements OnInit {
   async deletePhoto(p: Photo) {
     this.closePhoto();
     await this.photoService.deletePhoto(this.coupleId, p);
-  }
-
-  async reactPhoto(p: Photo, emoji: string) {
-    await this.coupleService.reactToPhoto(this.coupleId, p.id, this.myUid, emoji, p.reactions?.[this.myUid]);
-  }
-
-  photoReactionCount(p: Photo, emoji: string): number {
-    if (!p.reactions) return 0;
-    return Object.values(p.reactions).filter(e => e === emoji).length;
-  }
-
-  photoReactionSummary(p: Photo): string {
-    if (!p.reactions) return '';
-    const emojis = Object.values(p.reactions);
-    if (emojis.length === 0) return '';
-    return [...new Set(emojis)].join(' ');
   }
 }

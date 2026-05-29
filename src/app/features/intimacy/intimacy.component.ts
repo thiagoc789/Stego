@@ -52,11 +52,8 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
                   [class.future]="cell.isFuture"
                   [disabled]="cell.isFuture"
                   (click)="!cell.isFuture && toggleDay(cell.dateStr!)">
-                  @if (cell.isMarked) {
-                    <span class="heart-mark">❤️</span>
-                  } @else {
-                    {{ cell.day }}
-                  }
+                  {{ cell.day }}
+                  @if (cell.isMarked) { <span class="heart-dot">❤️</span> }
                 </button>
               }
             }
@@ -156,16 +153,16 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
     .cal-cell {
       aspect-ratio: 1; border-radius: 50%; border: none; background: none;
       font-size: 0.78rem; color: #aaa; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 1px;
       transition: background 0.15s, transform 0.1s;
       &.empty { cursor: default; }
       &.today { background: #fce4ec; color: #e91e63; font-weight: 700; }
-      &.marked { background: none; }
+      &.marked { background: #fff0f5; color: #333; font-weight: 600; }
       &.future { cursor: default; opacity: 0.3; }
-      &:not(.empty):not(.future):not(.marked):hover { background: #fff0f5; transform: scale(1.08); }
-      &:not(.empty):not(.future).marked:hover { transform: scale(1.12); }
+      &:not(.empty):not(.future):hover { background: #fff0f5; transform: scale(1.08); }
     }
-    .heart-mark { font-size: 1.1rem; line-height: 1; }
+    .heart-dot { font-size: 0.45rem; line-height: 1; }
 
     /* Recent */
     .recent-card {

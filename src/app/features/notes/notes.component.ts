@@ -8,8 +8,6 @@ import { CoupleService } from '../../core/services/couple.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Couple, Note } from '../../core/models/couple.model';
 
-const EMOJIS = ['❤️', '😂', '😍', '🥰', '👏'];
-
 const CARD_COLORS = [
   '#e8e0f5', // lavanda pastel
   '#daeaf8', // azul pastel
@@ -79,14 +77,9 @@ const CARD_COLORS = [
               <p class="card-body" [class.no-title]="!note.title">{{ note.text }}</p>
               <div class="card-footer">
                 <span class="card-author" [class.mine]="isMyNote(note)">{{ authorName(note) }}</span>
-                <div class="card-right">
-                  @if (noteReactionSummary(note)) {
-                    <span class="card-reactions">{{ noteReactionSummary(note) }}</span>
-                  }
-                  <button class="card-delete" (click)="$event.stopPropagation(); deleteNote(note)" title="Eliminar">
-                    <mat-icon>delete_outline</mat-icon>
-                  </button>
-                </div>
+                <button class="card-delete" (click)="$event.stopPropagation(); deleteNote(note)" title="Eliminar">
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
               </div>
             </div>
           }
@@ -129,20 +122,6 @@ const CARD_COLORS = [
 
           <!-- Body -->
           <p class="modal-body">{{ openedNote()!.text }}</p>
-
-          <!-- Reactions -->
-          <div class="reaction-bar">
-            @for (e of EMOJIS; track e) {
-              <button class="reaction-btn"
-                [class.selected]="openedNote()!.reactions?.[myUid] === e"
-                (click)="react(openedNote()!, e)">
-                {{ e }}
-                @if (reactionCount(openedNote()!, e) > 0) {
-                  <span class="reaction-count">{{ reactionCount(openedNote()!, e) }}</span>
-                }
-              </button>
-            }
-          </div>
 
           <!-- Footer: author + date -->
           <div class="modal-footer">
@@ -367,28 +346,9 @@ const CARD_COLORS = [
       border-top: 1px solid rgba(0,0,0,0.07);
     }
     .modal-date { font-size: 0.72rem; color: #aaa; }
-
-    /* ── Reactions ── */
-    .reaction-bar {
-      display: flex; gap: 0.4rem; flex-wrap: wrap;
-      padding: 0.5rem 1rem; border-top: 1px solid rgba(0,0,0,0.06);
-    }
-    .reaction-btn {
-      display: inline-flex; align-items: center; gap: 3px;
-      padding: 4px 9px; border-radius: 20px; border: 1.5px solid transparent;
-      background: rgba(0,0,0,0.05); font-size: 0.9rem; cursor: pointer;
-      transition: all 0.15s; font-family: inherit;
-      &.selected { background: #fce4ec; border-color: #f48fb1; }
-      &:hover { background: #fff0f5; border-color: #f48fb1; }
-    }
-    .reaction-count { font-size: 0.72rem; font-weight: 700; color: #e91e63; }
-
-    .card-right { display: flex; align-items: center; gap: 4px; }
-    .card-reactions { font-size: 0.78rem; letter-spacing: 1px; }
   `],
 })
 export class NotesComponent implements OnInit {
-  readonly EMOJIS = EMOJIS;
   private coupleService = inject(CoupleService);
   private authService  = inject(AuthService);
   private destroyRef   = inject(DestroyRef);
@@ -462,21 +422,5 @@ export class NotesComponent implements OnInit {
 
   async deleteNote(note: Note) {
     await this.coupleService.deleteNote(this.coupleId, note.id);
-  }
-
-  async react(note: Note, emoji: string) {
-    await this.coupleService.reactToNote(this.coupleId, note.id, this.myUid, emoji, note.reactions?.[this.myUid]);
-  }
-
-  reactionCount(note: Note, emoji: string): number {
-    if (!note.reactions) return 0;
-    return Object.values(note.reactions).filter(e => e === emoji).length;
-  }
-
-  noteReactionSummary(note: Note): string {
-    if (!note.reactions) return '';
-    const emojis = Object.values(note.reactions);
-    if (emojis.length === 0) return '';
-    return [...new Set(emojis)].join(' ');
   }
 }
