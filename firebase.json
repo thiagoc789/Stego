@@ -10,7 +10,7 @@
     "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"]
   },
   "hosting": {
-    "public": "dist/stego/browser",
+    "public": "dist/nosotros-app/browser",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
