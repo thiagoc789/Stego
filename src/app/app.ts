@@ -58,7 +58,7 @@ import { APP_VERSION } from './version';
             </a>
             <a routerLink="/nosotros" routerLinkActive="active">
               <mat-icon>local_fire_department</mat-icon>
-              <span>Llamas</span>
+              <span>Momentos</span>
             </a>
           </nav>
         </div>

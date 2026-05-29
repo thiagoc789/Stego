@@ -74,7 +74,7 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
         <!-- Recent list -->
         @if (recentDays().length > 0) {
           <div class="recent-card">
-            <p class="recent-label">Últimas llamas</p>
+            <p class="recent-label">Últimos momentos</p>
             @for (d of recentDays(); track d.date) {
               <div class="recent-row">
                 <span class="recent-icon">🔥</span>
@@ -168,12 +168,12 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
       gap: 1px;
       transition: background 0.15s, transform 0.1s;
       &.empty { cursor: default; }
-      &.today { background: #5b21b6; color: white; font-weight: 800; }
-      &.marked { background: #fff1f2; color: #9f1239; font-weight: 600; }
+      &.today { background: #ddd6fe; color: #5b21b6; font-weight: 800; box-shadow: 0 0 0 2px #7c3aed; }
+      &.marked { background: #ffe4e6; color: #be123c; font-weight: 700; }
       &.future { cursor: default; opacity: 0.3; }
-      &:not(.empty):not(.future):hover { background: #fff1f2; transform: scale(1.08); }
+      &:not(.empty):not(.future):hover { background: #ffe4e6; transform: scale(1.08); }
     }
-    .fire-dot { font-size: 0.5rem; line-height: 1; }
+    .fire-dot { font-size: 0.72rem; line-height: 1; }
 
     /* Streak */
     .streak-card {
