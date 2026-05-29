@@ -53,7 +53,11 @@ import { APP_VERSION } from './version';
             </a>
             <a routerLink="/reminders" routerLinkActive="active">
               <mat-icon>checklist</mat-icon>
-              <span>Tareas</span>
+              <span>Por hacer</span>
+            </a>
+            <a routerLink="/nosotros" routerLinkActive="active">
+              <mat-icon>spa</mat-icon>
+              <span>Nosotros</span>
             </a>
           </nav>
         </div>

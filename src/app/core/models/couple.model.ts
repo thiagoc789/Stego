@@ -32,6 +32,7 @@ export interface Note {
   authorUid: string;
   createdAt: Date;
   updatedAt: Date;
+  reactions?: { [uid: string]: string };
 }
 
 export interface Reminder {
@@ -51,4 +52,11 @@ export interface Photo {
   place: string;
   memoryDate: string;
   createdAt: Date;
+  reactions?: { [uid: string]: string };
+}
+
+export interface IntimacyDay {
+  date: string;
+  markedByUid: string;
+  markedAt: any;
 }

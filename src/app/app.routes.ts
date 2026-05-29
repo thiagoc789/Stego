@@ -31,6 +31,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/reminders/reminders.component').then(m => m.RemindersComponent),
     canActivate: [authGuard],
   },
+  {
+    path: 'nosotros',
+    loadComponent: () => import('./features/intimacy/intimacy.component').then(m => m.IntimacyComponent),
+    canActivate: [authGuard],
+  },
   { path: '', redirectTo: 'daily', pathMatch: 'full' },
   { path: '**', redirectTo: 'daily' },
 ];

@@ -4,10 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { filter, take, switchMap } from 'rxjs';
 import { CoupleService } from '../../core/services/couple.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Couple, DailyAnswer, KnowledgeRound } from '../../core/models/couple.model';
+import { Couple, DailyAnswer, IntimacyDay, KnowledgeRound } from '../../core/models/couple.model';
 import { KnowledgeGameComponent } from './knowledge-game.component';
 
-interface CalDay { day: number | null; dateStr: string | null; hasEntry: boolean; isToday: boolean; }
+interface CalDay { day: number | null; dateStr: string | null; hasEntry: boolean; hasIntimacy: boolean; isToday: boolean; }
 interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
 
 @Component({
@@ -30,6 +30,9 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
             <span class="countdown-icon">⏱</span>
             <span class="countdown">Próxima en {{ countdown() }}</span>
           </div>
+          @if (streak() > 0) {
+            <div class="streak-badge">🔥 {{ streak() }} {{ streak() === 1 ? 'día' : 'días' }} seguidos</div>
+          }
         </div>
 
         <!-- Input (before answering) -->
@@ -90,7 +93,10 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
                     [class.has-entry]="cell.hasEntry"
                     (click)="cell.hasEntry ? openPopup(cell.dateStr!) : null">
                     {{ cell.day }}
-                    @if (cell.hasEntry) { <span class="cal-dot"></span> }
+                    <div class="cal-dots">
+                      @if (cell.hasEntry) { <span class="cal-dot pink"></span> }
+                      @if (cell.hasIntimacy) { <span class="cal-dot red"></span> }
+                    </div>
                   </button>
                 }
               }
@@ -208,6 +214,7 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
     .countdown-row { display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.18); border-radius: 20px; padding: 4px 12px; width: fit-content; }
     .countdown-icon { font-size: 0.8rem; }
     .countdown { font-size: 0.75rem; color: rgba(255,255,255,0.9); font-variant-numeric: tabular-nums; letter-spacing: 0.5px; }
+    .streak-badge { margin-top: 0.5rem; font-size: 0.78rem; font-weight: 700; color: rgba(255,255,255,0.9); background: rgba(0,0,0,0.18); border-radius: 20px; padding: 4px 12px; width: fit-content; }
 
     /* Answers */
     .answers { display: flex; flex-direction: column; gap: 0.9rem; }
@@ -242,7 +249,8 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
       &.today { background: #fce4ec; color: #e91e63; font-weight: 700; }
       &.has-entry { cursor: pointer; color: #333; font-weight: 600; &:hover { background: #f3e5f5; } }
     }
-    .cal-dot { width: 4px; height: 4px; border-radius: 50%; background: #e91e63; flex-shrink: 0; }
+    .cal-dots { display: flex; gap: 2px; justify-content: center; }
+    .cal-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; &.pink { background: #e91e63; } &.red { background: #c62828; } }
 
     /* Popup */
     .popup-overlay {
@@ -323,6 +331,7 @@ export class DailyQuestionComponent implements OnInit, OnDestroy {
   countdown         = signal('--:--:--');
   dailyHistory      = signal<DailyAnswer[]>([]);
   knowledgeHistory  = signal<KnowledgeRound[]>([]);
+  intimacyDays      = signal<IntimacyDay[]>([]);
   loading           = signal(true);
 
   calYear  = signal(new Date().getFullYear());
@@ -348,10 +357,10 @@ export class DailyQuestionComponent implements OnInit, OnDestroy {
     const daysInM  = new Date(y, m + 1, 0).getDate();
     const today    = this.coupleService_.todayKey();
     const cells: CalDay[] = [];
-    for (let i = 0; i < offset; i++) cells.push({ day: null, dateStr: null, hasEntry: false, isToday: false });
+    for (let i = 0; i < offset; i++) cells.push({ day: null, dateStr: null, hasEntry: false, hasIntimacy: false, isToday: false });
     for (let d = 1; d <= daysInM; d++) {
       const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      cells.push({ day: d, dateStr: ds, hasEntry: this.combinedMap().has(ds), isToday: ds === today });
+      cells.push({ day: d, dateStr: ds, hasEntry: this.combinedMap().has(ds), hasIntimacy: this.intimacySet().has(ds), isToday: ds === today });
     }
     return cells;
   });
@@ -359,6 +368,23 @@ export class DailyQuestionComponent implements OnInit, OnDestroy {
   popupEntry = computed((): DayEntry | null =>
     this.popupDate() ? (this.combinedMap().get(this.popupDate()!) ?? null) : null
   );
+
+  intimacySet = computed(() => new Set(this.intimacyDays().map(d => d.date)));
+
+  streak = computed(() => {
+    const bothAnswered = new Set(
+      this.dailyHistory().filter(d => d.answerUser1 && d.answerUser2).map(d => d.date)
+    );
+    let count = (this.myAnswer() && this.partnerAnswer()) ? 1 : 0;
+    const col = new Date(Date.now() - 5 * 3_600_000);
+    col.setUTCDate(col.getUTCDate() - 1);
+    for (let i = 0; i < 365; i++) {
+      const ds = `${col.getUTCFullYear()}-${String(col.getUTCMonth()+1).padStart(2,'0')}-${String(col.getUTCDate()).padStart(2,'0')}`;
+      if (bothAnswered.has(ds)) { count++; col.setUTCDate(col.getUTCDate() - 1); }
+      else break;
+    }
+    return count;
+  });
 
   private coupleId = '';
   private uid = '';
@@ -400,6 +426,10 @@ export class DailyQuestionComponent implements OnInit, OnDestroy {
       this.coupleService_.getKnowledgeHistory$(this.coupleId)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(h => this.knowledgeHistory.set(h));
+
+      this.coupleService_.getIntimacyDays$(this.coupleId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(d => this.intimacyDays.set(d));
     });
   }
 

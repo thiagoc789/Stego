@@ -46,3 +46,6 @@ mat-card {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #f48fb1; border-radius: 4px; }
+
+/* Prevent iOS auto-zoom on input focus (font-size < 16px triggers zoom) */
+input, textarea, select { font-size: 16px; touch-action: manipulation; }

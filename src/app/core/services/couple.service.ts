@@ -1,7 +1,7 @@
 import { Injectable, inject, NgZone } from '@angular/core';
-import { Firestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, onSnapshot, query, orderBy, deleteDoc } from '@angular/fire/firestore';
+import { Firestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, deleteField } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
-import { Couple, DailyAnswer, KnowledgeRound, Note, Reminder } from '../models/couple.model';
+import { Couple, DailyAnswer, IntimacyDay, KnowledgeRound, Note, Reminder } from '../models/couple.model';
 import { AppUser } from '../models/user.model';
 import { AuthService } from './auth.service';
 import { DAILY_QUESTIONS } from '../data/questions';
@@ -209,6 +209,50 @@ export class CoupleService {
 
   async deleteReminder(coupleId: string, reminderId: string): Promise<void> {
     await deleteDoc(doc(this.firestore, `couples/${coupleId}/reminders/${reminderId}`));
+  }
+
+  // ── Reactions ────────────────────────────────────────────────────────
+
+  async reactToNote(coupleId: string, noteId: string, uid: string, emoji: string, current: string | undefined): Promise<void> {
+    const ref = doc(this.firestore, `couples/${coupleId}/notes/${noteId}`);
+    if (current === emoji) {
+      await updateDoc(ref, { [`reactions.${uid}`]: deleteField() });
+    } else {
+      await updateDoc(ref, { [`reactions.${uid}`]: emoji });
+    }
+  }
+
+  async reactToPhoto(coupleId: string, photoId: string, uid: string, emoji: string, current: string | undefined): Promise<void> {
+    const ref = doc(this.firestore, `couples/${coupleId}/photos/${photoId}`);
+    if (current === emoji) {
+      await updateDoc(ref, { [`reactions.${uid}`]: deleteField() });
+    } else {
+      await updateDoc(ref, { [`reactions.${uid}`]: emoji });
+    }
+  }
+
+  // ── Intimacy ─────────────────────────────────────────────────────────
+
+  getIntimacyDays$(coupleId: string): Observable<IntimacyDay[]> {
+    return new Observable(observer => {
+      const q = query(
+        collection(this.firestore, `couples/${coupleId}/intimacy`),
+        orderBy('date', 'desc')
+      );
+      return onSnapshot(q, snap => {
+        this.ngZone.run(() => observer.next(snap.docs.map(d => d.data() as IntimacyDay)));
+      });
+    });
+  }
+
+  async toggleIntimacyDay(coupleId: string, date: string, uid: string): Promise<void> {
+    const ref = doc(this.firestore, `couples/${coupleId}/intimacy/${date}`);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      await deleteDoc(ref);
+    } else {
+      await setDoc(ref, { date, markedByUid: uid, markedAt: new Date() } satisfies IntimacyDay);
+    }
   }
 
   getQuestionById(id: number): string {
