@@ -28,6 +28,6 @@ jobs:
       - name: Deploy to Firebase
         run: |
           echo "$FIREBASE_SERVICE_ACCOUNT" > /tmp/sa.json
-          GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa.json firebase deploy --project stego-cd22b --non-interactive
+          GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa.json firebase deploy --only hosting --project stego-cd22b --non-interactive
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
