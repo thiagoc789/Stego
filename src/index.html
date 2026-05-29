@@ -77,10 +77,11 @@
     <app-root></app-root>
     <noscript>Please enable JavaScript to continue using this application.</noscript>
     <script>
-      // Hide splash only when BOTH conditions are met:
-      //   1. Minimum 3.5s have passed
-      //   2. Angular has bootstrapped (app-root has children)
-      // Whichever arrives last triggers the hide — no max cap.
+      // Splash timing rules:
+      //   - Shows for AT LEAST 2.5 s (minimum)
+      //   - Hides as soon as Angular renders content (app-root has children)
+      //   - Both conditions must be met simultaneously (whichever arrives last)
+      //   - Hard cap at 10 s to prevent infinite splash on bad connections
       (function() {
         var splash = document.getElementById('splash');
         var hidden = false;
@@ -93,11 +94,16 @@
           splash.classList.add('hidden');
           setTimeout(function() {
             if (splash.parentNode) splash.parentNode.removeChild(splash);
-          }, 700);
+          }, 600);
         }
 
-        setTimeout(function() { minTimeDone = true; tryHide(); }, 3500);
+        // Minimum 2.5 s
+        setTimeout(function() { minTimeDone = true; tryHide(); }, 2500);
 
+        // Hard cap: 10 s — force hide regardless (bad connection safety net)
+        setTimeout(function() { minTimeDone = true; appReady = true; tryHide(); }, 10000);
+
+        // Hide once Angular has rendered the app shell
         var observer = new MutationObserver(function() {
           var root = document.querySelector('app-root');
           if (root && root.children.length > 0) {
