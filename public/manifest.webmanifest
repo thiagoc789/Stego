@@ -1,10 +1,10 @@
 {
-  "name": "Nosotros",
-  "short_name": "Nosotros",
+  "name": "Stego",
+  "short_name": "Stego",
   "description": "El espacio privado de los dos",
   "display": "standalone",
-  "background_color": "#fce4ec",
-  "theme_color": "#e91e63",
+  "background_color": "#1e1433",
+  "theme_color": "#2d1b69",
   "scope": "./",
   "start_url": "./",
   "icons": [

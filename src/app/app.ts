@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { switchMap, of, filter, take } from 'rxjs';
+import { SwUpdate } from '@angular/service-worker';
 import { AuthService } from './core/services/auth.service';
 import { CoupleService } from './core/services/couple.service';
 import { NotificationService } from './core/services/notification.service';
@@ -143,6 +144,7 @@ export class App implements OnInit {
   private notificationService = inject(NotificationService);
   private coupleService = inject(CoupleService);
   private destroyRef = inject(DestroyRef);
+  private swUpdate = inject(SwUpdate, { optional: true });
 
   notifGranted = signal(false);
   private currentUid: string | null = null;
@@ -154,6 +156,16 @@ export class App implements OnInit {
   );
 
   ngOnInit() {
+    // Auto-update: activate new service worker immediately and reload
+    if (this.swUpdate?.isEnabled) {
+      this.swUpdate.versionUpdates.pipe(
+        filter(e => e.type === 'VERSION_READY'),
+        take(1)
+      ).subscribe(() => this.swUpdate!.activateUpdate().then(() => location.reload()));
+
+      this.swUpdate.checkForUpdate();
+    }
+
     // Reset viewport scroll after keyboard dismissal on iOS PWA
     document.addEventListener('focusout', () => {
       window.setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }), 80);
