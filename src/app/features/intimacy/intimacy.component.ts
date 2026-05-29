@@ -103,12 +103,12 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
     /* Skeletons */
     .skeleton-header {
       height: 90px; border-radius: 18px;
-      background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+      background: linear-gradient(90deg, rgba(0,0,0,0.07) 25%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.07) 75%);
       background-size: 200% 100%; animation: shimmer 1.4s infinite;
     }
     .skeleton-cal {
       height: 300px; border-radius: 18px;
-      background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+      background: linear-gradient(90deg, rgba(0,0,0,0.07) 25%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.07) 75%);
       background-size: 200% 100%; animation: shimmer 1.4s infinite;
     }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
@@ -271,6 +271,9 @@ export class IntimacyComponent implements OnInit {
   });
 
   ngOnInit() {
+    // Safety: stop showing skeleton after 8s even if Firestore never responds
+    setTimeout(() => this.loading.set(false), 8000);
+
     this.authService.currentUser$.pipe(
       filter(u => !!u?.coupleId),
       take(1),
@@ -280,10 +283,16 @@ export class IntimacyComponent implements OnInit {
         return this.coupleService.getCouple$(this.coupleId).pipe(take(1));
       }),
       takeUntilDestroyed(this.destroyRef)
-    ).subscribe(() => {
-      this.coupleService.getIntimacyDays$(this.coupleId)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe(d => { this.days.set(d); this.loading.set(false); });
+    ).subscribe({
+      next: () => {
+        this.coupleService.getIntimacyDays$(this.coupleId)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: d => { this.days.set(d); this.loading.set(false); },
+            error: () => this.loading.set(false),
+          });
+      },
+      error: () => this.loading.set(false),
     });
   }
 

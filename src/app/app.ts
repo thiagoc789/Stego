@@ -1,5 +1,5 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { AsyncPipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -34,6 +34,15 @@ import { APP_VERSION } from './version';
               </button>
             </div>
           </header>
+
+          <!-- Update banner: only shown when update detected during navigation -->
+          @if (updateAvailable()) {
+            <div class="update-banner">
+              <span class="update-text">✨ Hay una versión nueva</span>
+              <button class="update-yes" (click)="applyUpdate()">Actualizar</button>
+              <button class="update-no" (click)="updateAvailable.set(false)">Ahora no</button>
+            </div>
+          }
 
           <main class="content">
             <router-outlet />
@@ -110,6 +119,26 @@ import { APP_VERSION } from './version';
     .notif-btn:hover { color: white; }
     .logout-btn { color: rgba(255,255,255,0.8); }
 
+    /* Update banner */
+    .update-banner {
+      flex-shrink: 0;
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.65rem 1rem;
+      background: linear-gradient(90deg, #1e1433, #3b0764);
+      border-bottom: 1px solid rgba(168,85,247,0.25);
+    }
+    .update-text { flex: 1; font-size: 0.82rem; color: #e9d5ff; font-weight: 500; }
+    .update-yes {
+      padding: 0.35rem 0.85rem; border-radius: 8px; border: none;
+      background: #a855f7; color: white; font-size: 0.8rem; font-weight: 700;
+      cursor: pointer; font-family: inherit; flex-shrink: 0;
+    }
+    .update-no {
+      padding: 0.35rem 0.6rem; border-radius: 8px; border: none;
+      background: transparent; color: rgba(255,255,255,0.4); font-size: 0.78rem;
+      cursor: pointer; font-family: inherit; flex-shrink: 0;
+    }
+
     .content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 
     .bottom-nav {
@@ -145,9 +174,12 @@ export class App implements OnInit {
   private coupleService = inject(CoupleService);
   private destroyRef = inject(DestroyRef);
   private swUpdate = inject(SwUpdate, { optional: true });
+  private router = inject(Router);
 
   notifGranted = signal(false);
+  updateAvailable = signal(false);
   private currentUid: string | null = null;
+  private isStartup = true;
 
   couple$ = this.auth.currentUser$.pipe(
     switchMap(user =>
@@ -156,14 +188,34 @@ export class App implements OnInit {
   );
 
   ngOnInit() {
-    // Auto-update: activate new service worker immediately and reload
+    // Mark startup phase over after 5s (splash + initial Firestore load)
+    setTimeout(() => { this.isStartup = false; }, 5000);
+
     if (this.swUpdate?.isEnabled) {
+      // React to version updates
       this.swUpdate.versionUpdates.pipe(
         filter(e => e.type === 'VERSION_READY'),
-        take(1)
-      ).subscribe(() => this.swUpdate!.activateUpdate().then(() => location.reload()));
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe(() => {
+        if (this.isStartup) {
+          // During startup: update silently
+          this.swUpdate!.activateUpdate().then(() => location.reload());
+        } else {
+          // During use: ask the user
+          this.updateAvailable.set(true);
+        }
+      });
 
+      // Check on launch
       this.swUpdate.checkForUpdate();
+
+      // Check on every tab navigation
+      this.router.events.pipe(
+        filter(e => e instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe(() => {
+        if (!this.isStartup) this.swUpdate!.checkForUpdate();
+      });
     }
 
     // Reset viewport scroll after keyboard dismissal on iOS PWA
@@ -180,13 +232,16 @@ export class App implements OnInit {
       this.notificationService.listenForeground();
       this.notifGranted.set('Notification' in window && Notification.permission === 'granted');
 
-      // On non-iOS request automatically; on iOS wait for user tap
       if (!this.isIos()) {
         this.notificationService.requestPermission(user!.uid).then(() =>
           this.notifGranted.set('Notification' in window && Notification.permission === 'granted')
         );
       }
     });
+  }
+
+  applyUpdate() {
+    this.swUpdate!.activateUpdate().then(() => location.reload());
   }
 
   async enableNotifications() {
