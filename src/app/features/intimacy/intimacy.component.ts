@@ -168,8 +168,8 @@ interface CalCell { day: number | null; dateStr: string | null; isToday: boolean
       gap: 1px;
       transition: background 0.15s, transform 0.1s;
       &.empty { cursor: default; }
-      &.today { background: #ede9fe; color: #7c3aed; font-weight: 700; }
-      &.marked { background: #f5f3ff; color: #333; font-weight: 600; }
+      &.today { background: #5b21b6; color: white; font-weight: 800; }
+      &.marked { background: #ede9fe; color: #5b21b6; font-weight: 600; }
       &.future { cursor: default; opacity: 0.3; }
       &:not(.empty):not(.future):hover { background: #f5f3ff; transform: scale(1.08); }
     }

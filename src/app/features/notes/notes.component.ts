@@ -244,7 +244,7 @@ const CARD_COLORS = [
     }
     .card-author {
       font-size: 0.65rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.5px; color: #6d28d9;
+      text-transform: uppercase; letter-spacing: 0.5px; color: #ec4899;
       &.mine { color: #7c3aed; }
     }
     .card-delete {

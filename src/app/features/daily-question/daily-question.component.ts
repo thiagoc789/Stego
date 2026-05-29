@@ -220,10 +220,10 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
     .answers { display: flex; flex-direction: column; gap: 0.9rem; }
     .answer-card { border-radius: 18px; padding: 1rem 1.2rem; box-shadow: 0 3px 12px rgba(0,0,0,0.07); }
     .answer-card.mine    { background: white; border-left: 4px solid #7c3aed; }
-    .answer-card.partner { background: white; border-left: 4px solid #6d28d9; }
+    .answer-card.partner { background: white; border-left: 4px solid #ec4899; }
     .answer-who { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 0.5rem; }
     .mine    .answer-who { color: #7c3aed; }
-    .partner .answer-who { color: #6d28d9; }
+    .partner .answer-who { color: #ec4899; }
     .answer-text { margin: 0; font-size: 0.95rem; line-height: 1.6; color: #333; }
     .waiting-card { text-align: center; padding: 1.5rem; background: white; border-radius: 16px; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; opacity: 0.7; span { font-size: 2rem; } p { margin: 0; font-size: 0.85rem; color: #aaa; } }
 
@@ -288,7 +288,7 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
     /* daily popup answers */
     .pa { display: flex; gap: 8px; align-items: baseline; font-size: 0.85rem; flex-wrap: wrap; }
     .pa.mine    .pa-who { color: #7c3aed; }
-    .pa.partner .pa-who { color: #6d28d9; }
+    .pa.partner .pa-who { color: #ec4899; }
     .pa-who { font-weight: 700; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; flex-shrink: 0; }
     .pa-text { color: #444; line-height: 1.4; }
 
@@ -298,12 +298,12 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
       border-radius: 14px; padding: 0.75rem 0.8rem;
       display: flex; flex-direction: column; gap: 0.55rem;
       &.mine    { background: #f5f3ff; border: 1.5px solid #ede9fe; }
-      &.partner { background: #f5f0ff; border: 1.5px solid #ede7f6; }
+      &.partner { background: #fff0f6; border: 1.5px solid #fce7f3; }
     }
     .kr-name {
       font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
       .mine &    { color: #7c3aed; }
-      .partner & { color: #6d28d9; }
+      .partner & { color: #ec4899; }
     }
     .kr-block { display: flex; flex-direction: column; gap: 2px; }
     .kr-block.guess { padding-top: 0.45rem; border-top: 1px dashed #eee; }

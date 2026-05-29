@@ -25,7 +25,7 @@ import { Couple, Reminder } from '../../core/models/couple.model';
       @if (!loading() && reminders().length > 0) {
         <div class="progress-card">
           <div class="progress-texts">
-            <span class="progress-label">Tareas</span>
+            <span class="progress-label">Cosas por hacer</span>
             <span class="progress-count">
               <strong>{{ doneCount() }}</strong> de {{ reminders().length }} completadas
             </span>
@@ -269,7 +269,7 @@ import { Couple, Reminder } from '../../core/models/couple.model';
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.4px;
-      color: #6d28d9;
+      color: #ec4899;
       &.mine { color: #7c3aed; }
     }
     .del-btn {
