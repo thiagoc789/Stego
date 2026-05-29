@@ -44,7 +44,7 @@ import { KnowledgeRound } from '../../core/models/couple.model';
         <div class="results-card">
           <div class="result-row">
             <div class="result-info">
-              <span class="result-name">{{ partnerName() }}</span>
+              <span class="result-name partner">{{ partnerName() }}</span>
               <span class="result-answer">respondió: <strong>{{ partnerOwnAnswer() ?? '...' }}</strong></span>
             </div>
             @if (partnerOwnAnswer()) {
@@ -63,7 +63,7 @@ import { KnowledgeRound } from '../../core/models/couple.model';
           <div class="divider"></div>
           <div class="result-row">
             <div class="result-info">
-              <span class="result-name">Vos</span>
+              <span class="result-name mine">Vos</span>
               <span class="result-answer">respondiste: <strong>{{ myOwnAnswer() }}</strong></span>
             </div>
             @if (partnerGuess()) {
@@ -92,11 +92,11 @@ import { KnowledgeRound } from '../../core/models/couple.model';
     .knowledge-header {
       display: flex; gap: 0.75rem; align-items: flex-start;
       padding: 1.2rem 1.2rem 0.8rem;
-      background: linear-gradient(135deg, #f3e5f5, #fce4ec);
-      border-radius: 18px; border-left: 4px solid #9c27b0;
+      background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+      border-radius: 18px; border-left: 4px solid #7c3aed;
     }
     .knowledge-header > span { font-size: 1.6rem; flex-shrink: 0; }
-    .knowledge-header h3 { margin: 0 0 4px; font-size: 0.8rem; font-weight: 700; color: #7b1fa2; text-transform: uppercase; letter-spacing: 1px; }
+    .knowledge-header h3 { margin: 0 0 4px; font-size: 0.8rem; font-weight: 700; color: #6d28d9; text-transform: uppercase; letter-spacing: 1px; }
     .knowledge-header p { margin: 0; font-size: 1rem; font-weight: 500; color: #333; line-height: 1.4; }
 
     .step-card {
@@ -107,7 +107,7 @@ import { KnowledgeRound } from '../../core/models/couple.model';
     .step-label { margin: 0; font-size: 0.9rem; color: #555; }
     .my-answer-badge {
       display: inline-flex; align-items: center; gap: 6px;
-      background: #f3e5f5; color: #7b1fa2; font-size: 0.82rem;
+      background: #ede9fe; color: #7c3aed; font-size: 0.82rem;
       padding: 4px 10px; border-radius: 20px; align-self: flex-start;
     }
     .my-answer-badge span { color: #4caf50; font-weight: 700; }
@@ -115,10 +115,10 @@ import { KnowledgeRound } from '../../core/models/couple.model';
     .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
     .option-btn {
       padding: 0.75rem 0.5rem; border-radius: 12px;
-      border: 2px solid #f0d0e8; background: white;
+      border: 2px solid #ddd6fe; background: white;
       font-size: 0.88rem; font-weight: 500; color: #444;
       cursor: pointer; transition: all 0.18s ease; text-align: center;
-      &:hover { border-color: #e91e63; background: #fce4ec; color: #c2185b; transform: translateY(-1px); }
+      &:hover { border-color: #7c3aed; background: #ede9fe; color: #6d28d9; transform: translateY(-1px); }
       &:active { transform: scale(0.97); }
     }
 
@@ -129,14 +129,16 @@ import { KnowledgeRound } from '../../core/models/couple.model';
     }
     .result-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
     .result-info { display: flex; flex-direction: column; gap: 2px; flex: 1; }
-    .result-name { font-size: 0.72rem; font-weight: 700; color: #9c27b0; text-transform: uppercase; letter-spacing: 0.5px; }
+    .result-name { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #ec4899; }
+    .result-name.mine { color: #7c3aed; }
+    .result-name.partner { color: #ec4899; }
     .result-answer { font-size: 0.9rem; color: #333; }
     .result-badge {
       width: 32px; height: 32px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-size: 1rem; font-weight: 700; flex-shrink: 0;
       &.correct { background: #e8f5e9; color: #4caf50; }
-      &.wrong   { background: #fce4ec; color: #e91e63; }
+      &.wrong   { background: #f5f3ff; color: #7c3aed; }
     }
     .waiting-dot { font-size: 1.1rem; }
     .guess-detail { margin: 0; font-size: 0.78rem; color: #aaa; }
