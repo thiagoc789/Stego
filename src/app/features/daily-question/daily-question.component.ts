@@ -7,7 +7,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { Couple, DailyAnswer, IntimacyDay, KnowledgeRound } from '../../core/models/couple.model';
 import { KnowledgeGameComponent } from './knowledge-game.component';
 
-interface CalDay { day: number | null; dateStr: string | null; hasEntry: boolean; hasIntimacy: boolean; isToday: boolean; }
+interface CalDay { day: number | null; dateStr: string | null; hasEntry: boolean; hasIntimacy: boolean; isToday: boolean; isFuture: boolean; }
 interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
 
 @Component({
@@ -72,37 +72,38 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
         <app-knowledge-game />
 
         <!-- Calendar history -->
-        @if (combinedMap().size > 0) {
-          <div class="section-divider"><span></span><span>📖</span><span></span></div>
-          <div class="calendar-section">
-            <div class="cal-header">
-              <button class="cal-nav" (click)="prevMonth()">‹</button>
-              <span class="cal-title">{{ calMonthLabel() }}</span>
-              <button class="cal-nav" (click)="nextMonth()">›</button>
-            </div>
-            <div class="cal-grid">
-              @for (h of ['L','M','M','J','V','S','D']; track h + $index) {
-                <div class="cal-weekday">{{ h }}</div>
-              }
-              @for (cell of calDays(); track $index) {
-                @if (cell.day === null) {
-                  <div class="cal-cell empty"></div>
-                } @else {
-                  <button class="cal-cell"
-                    [class.today]="cell.isToday"
-                    [class.has-entry]="cell.hasEntry"
-                    (click)="cell.hasEntry ? openPopup(cell.dateStr!) : null">
-                    {{ cell.day }}
-                    <div class="cal-dots">
-                      @if (cell.hasEntry) { <span class="cal-dot pink"></span> }
-                      @if (cell.hasIntimacy) { <span class="cal-dot red"></span> }
-                    </div>
-                  </button>
-                }
-              }
-            </div>
+        <div class="section-divider"><span></span><span>📖</span><span></span></div>
+        <div class="calendar-section">
+          <div class="cal-header">
+            <button class="cal-nav" (click)="prevMonth()">‹</button>
+            <span class="cal-title">{{ calMonthLabel() }}</span>
+            <button class="cal-nav" (click)="nextMonth()">›</button>
           </div>
-        }
+          <div class="cal-grid">
+            @for (h of ['L','M','M','J','V','S','D']; track h + $index) {
+              <div class="cal-weekday">{{ h }}</div>
+            }
+            @for (cell of calDays(); track $index) {
+              @if (cell.day === null) {
+                <div class="cal-cell empty"></div>
+              } @else {
+                <button class="cal-cell"
+                  [class.today]="cell.isToday"
+                  [class.has-entry]="cell.hasEntry"
+                  [class.past]="!cell.isToday && !cell.isFuture"
+                  [class.future]="cell.isFuture"
+                  [disabled]="cell.isFuture || cell.isToday"
+                  (click)="openPopup(cell.dateStr!)">
+                  {{ cell.day }}
+                  <div class="cal-dots">
+                    @if (cell.hasEntry) { <span class="cal-dot pink"></span> }
+                    @if (cell.hasIntimacy) { <span class="cal-dot red"></span> }
+                  </div>
+                </button>
+              }
+            }
+          </div>
+        </div>
 
       }
     </div>
@@ -114,27 +115,44 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
           <button class="popup-close" (click)="closePopup()">✕</button>
           <div class="popup-date">{{ formatDate(popupDate()!) }}</div>
 
-          @if (popupEntry()?.daily; as d) {
-            <div class="popup-section">
-              <div class="popup-label">💕 Pregunta del día</div>
-              <p class="popup-question">{{ coupleService.getQuestionById(d.questionId) }}</p>
+          <!-- Daily question -->
+          <div class="popup-section">
+            <div class="popup-label">💕 Pregunta del día</div>
+            <p class="popup-question">{{ popupQuestion() }}</p>
+
+            @if (popupMyAnswer()) {
+              <!-- Already answered: show answers -->
               <div class="popup-answers">
-                @if (isUser1 ? d.answerUser1 : d.answerUser2; as mine) {
-                  <div class="pa mine"><span class="pa-who">{{ myName() }}</span><span class="pa-text">{{ mine }}</span></div>
-                }
-                @if (isUser1 ? d.answerUser2 : d.answerUser1; as theirs) {
-                  <div class="pa partner"><span class="pa-who">{{ partnerName() }}</span><span class="pa-text">{{ theirs }}</span></div>
+                <div class="pa mine">
+                  <span class="pa-who">{{ myName() }}</span>
+                  <span class="pa-text">{{ popupMyAnswer() }}</span>
+                </div>
+                @if (popupPartnerAnswer()) {
+                  <div class="pa partner">
+                    <span class="pa-who">{{ partnerName() }}</span>
+                    <span class="pa-text">{{ popupPartnerAnswer() }}</span>
+                  </div>
+                } @else {
+                  <p class="pa-waiting">💭 Esperando respuesta de {{ partnerName() }}...</p>
                 }
               </div>
-            </div>
-          }
+            } @else {
+              <!-- Not answered yet: show input -->
+              <div class="popup-answer-form">
+                <textarea class="popup-answer-input" [(ngModel)]="popupAnswerText"
+                  placeholder="Tu respuesta para este día..." rows="3"></textarea>
+                <button class="popup-submit-btn" (click)="submitPopupAnswer()" [disabled]="!popupAnswerText.trim()">
+                  Guardar respuesta
+                </button>
+              </div>
+            }
+          </div>
 
           @if (popupEntry()?.knowledge; as kr) {
             <div class="popup-section">
               <div class="popup-label">🧠 Juego de conocimiento</div>
               <p class="popup-question">{{ coupleService.getKnowledgeQuestionById(kr.questionId) }}</p>
               <div class="kr-grid">
-                <!-- User1 column -->
                 <div class="kr-col" [class.mine]="isUser1" [class.partner]="!isUser1">
                   <span class="kr-name">{{ isUser1 ? myName() : partnerName() }}</span>
                   <div class="kr-block">
@@ -153,7 +171,6 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
                     </div>
                   </div>
                 </div>
-                <!-- User2 column -->
                 <div class="kr-col" [class.mine]="!isUser1" [class.partner]="isUser1">
                   <span class="kr-name">{{ !isUser1 ? myName() : partnerName() }}</span>
                   <div class="kr-block">
@@ -192,7 +209,7 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
     /* Skeleton */
     .skeleton-card {
       height: 160px; border-radius: 22px;
-      background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+      background: linear-gradient(90deg, rgba(0,0,0,0.07) 25%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.07) 75%);
       background-size: 200% 100%; animation: shimmer 1.4s infinite;
       &.short { height: 80px; border-radius: 16px; }
     }
@@ -247,7 +264,9 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       position: relative; gap: 1px;
       &.today { background: #ede9fe; color: #7c3aed; font-weight: 700; }
-      &.has-entry { cursor: pointer; color: #333; font-weight: 600; &:hover { background: #ede9fe; } }
+      &.has-entry { color: #333; font-weight: 600; }
+      &.past { cursor: pointer; &:hover { background: #ede9fe; color: #7c3aed; } }
+      &.future { opacity: 0.3; }
     }
     .cal-dots { display: flex; gap: 2px; justify-content: center; }
     .cal-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; &.pink { background: #7c3aed; } &.red { background: #c62828; } }
@@ -265,7 +284,7 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
     .popup-card {
       background: white; border-radius: 24px;
       width: 100%; max-width: 440px;
-      max-height: 80vh; overflow-y: auto;
+      max-height: 85vh; overflow-y: auto;
       padding: 1.4rem 1.4rem 1.6rem;
       position: relative;
       display: flex; flex-direction: column; gap: 1rem;
@@ -285,12 +304,17 @@ interface DayEntry { daily?: DailyAnswer; knowledge?: KnowledgeRound; }
     .popup-label { font-size: 0.8rem; font-weight: 700; color: #999; }
     .popup-question { margin: 0; font-size: 0.95rem; font-weight: 500; color: #333; line-height: 1.5; }
     .popup-answers { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.1rem; }
-    /* daily popup answers */
     .pa { display: flex; gap: 8px; align-items: baseline; font-size: 0.85rem; flex-wrap: wrap; }
     .pa.mine    .pa-who { color: #7c3aed; }
     .pa.partner .pa-who { color: #ec4899; }
     .pa-who { font-weight: 700; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; flex-shrink: 0; }
     .pa-text { color: #444; line-height: 1.4; }
+    .pa-waiting { font-size: 0.78rem; color: #bbb; }
+
+    /* Popup answer form */
+    .popup-answer-form { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.3rem; }
+    .popup-answer-input { width: 100%; border: 1.5px solid #ede9fe; border-radius: 12px; padding: 0.75rem; font-size: 0.9rem; font-family: inherit; line-height: 1.5; resize: none; outline: none; background: white; box-sizing: border-box; &:focus { border-color: #7c3aed; } &::placeholder { color: #ccc; } }
+    .popup-submit-btn { padding: 0.65rem; border-radius: 12px; border: none; background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; font-size: 0.88rem; font-weight: 600; cursor: pointer; font-family: inherit; &:disabled { background: #eee; color: #bbb; cursor: default; } }
 
     /* knowledge two-column grid */
     .kr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-top: 0.2rem; }
@@ -337,6 +361,7 @@ export class DailyQuestionComponent implements OnInit, OnDestroy {
   calYear  = signal(new Date().getFullYear());
   calMonth = signal(new Date().getMonth());
   popupDate = signal<string | null>(null);
+  popupAnswerText = '';
 
   combinedMap = computed((): Map<string, DayEntry> => {
     const m = new Map<string, DayEntry>();
@@ -357,10 +382,16 @@ export class DailyQuestionComponent implements OnInit, OnDestroy {
     const daysInM  = new Date(y, m + 1, 0).getDate();
     const today    = this.coupleService_.todayKey();
     const cells: CalDay[] = [];
-    for (let i = 0; i < offset; i++) cells.push({ day: null, dateStr: null, hasEntry: false, hasIntimacy: false, isToday: false });
+    for (let i = 0; i < offset; i++) cells.push({ day: null, dateStr: null, hasEntry: false, hasIntimacy: false, isToday: false, isFuture: false });
     for (let d = 1; d <= daysInM; d++) {
       const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      cells.push({ day: d, dateStr: ds, hasEntry: this.combinedMap().has(ds), hasIntimacy: this.intimacySet().has(ds), isToday: ds === today });
+      cells.push({
+        day: d, dateStr: ds,
+        hasEntry: this.combinedMap().has(ds),
+        hasIntimacy: this.intimacySet().has(ds),
+        isToday: ds === today,
+        isFuture: ds > today,
+      });
     }
     return cells;
   });
@@ -368,6 +399,22 @@ export class DailyQuestionComponent implements OnInit, OnDestroy {
   popupEntry = computed((): DayEntry | null =>
     this.popupDate() ? (this.combinedMap().get(this.popupDate()!) ?? null) : null
   );
+
+  popupQuestion = computed(() =>
+    this.popupDate() ? this.coupleService_.getQuestionForDate(this.popupDate()!) : ''
+  );
+
+  popupMyAnswer = computed(() => {
+    const d = this.popupEntry()?.daily;
+    if (!d) return null;
+    return this.isUser1 ? d.answerUser1 : d.answerUser2;
+  });
+
+  popupPartnerAnswer = computed(() => {
+    const d = this.popupEntry()?.daily;
+    if (!d) return null;
+    return this.isUser1 ? d.answerUser2 : d.answerUser1;
+  });
 
   intimacySet = computed(() => new Set(this.intimacyDays().map(d => d.date)));
 
@@ -441,7 +488,15 @@ export class DailyQuestionComponent implements OnInit, OnDestroy {
     this.answerText = '';
   }
 
-  openPopup(dateStr: string) { this.popupDate.set(dateStr); }
+  async submitPopupAnswer() {
+    if (!this.popupAnswerText.trim() || !this.coupleId || !this.popupDate()) return;
+    await this.coupleService_.saveAnswerForDate(
+      this.coupleId, this.uid, this.popupAnswerText.trim(), this.isUser1, this.popupDate()!
+    );
+    this.popupAnswerText = '';
+  }
+
+  openPopup(dateStr: string) { this.popupDate.set(dateStr); this.popupAnswerText = ''; }
   closePopup() { this.popupDate.set(null); }
 
   prevMonth() {

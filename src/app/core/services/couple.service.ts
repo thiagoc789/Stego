@@ -93,21 +93,34 @@ export class CoupleService {
   }
 
   async saveAnswer(coupleId: string, uid: string, answer: string, isUser1: boolean): Promise<void> {
-    const today = this.todayKey();
-    const ref = doc(this.firestore, `couples/${coupleId}/dailyAnswers/${today}`);
+    await this.saveAnswerForDate(coupleId, uid, answer, isUser1, this.todayKey());
+  }
+
+  async saveAnswerForDate(coupleId: string, uid: string, answer: string, isUser1: boolean, dateStr: string): Promise<void> {
+    const ref = doc(this.firestore, `couples/${coupleId}/dailyAnswers/${dateStr}`);
     const field = isUser1 ? 'answerUser1' : 'answerUser2';
     const snap = await getDoc(ref);
-
     if (snap.exists()) {
       await updateDoc(ref, { [field]: answer });
     } else {
       await setDoc(ref, {
-        date: today,
-        questionId: this.getDayOfYear() % DAILY_QUESTIONS.length,
+        date: dateStr,
+        questionId: this.getQuestionIdForDate(dateStr),
         answerUser1: isUser1 ? answer : null,
         answerUser2: isUser1 ? null : answer,
       } satisfies DailyAnswer);
     }
+  }
+
+  getQuestionForDate(dateStr: string): string {
+    return DAILY_QUESTIONS[this.getQuestionIdForDate(dateStr)];
+  }
+
+  private getQuestionIdForDate(dateStr: string): number {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const date = new Date(Date.UTC(y, m - 1, d));
+    const yearStart = new Date(Date.UTC(y, 0, 0));
+    return Math.floor((date.getTime() - yearStart.getTime()) / 86_400_000) % DAILY_QUESTIONS.length;
   }
 
   // ── Knowledge Game ───────────────────────────────────────────────────
