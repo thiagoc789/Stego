@@ -1,6 +1,6 @@
 import { Injectable, inject, NgZone } from '@angular/core';
 import { Firestore, collection, doc, addDoc, deleteDoc, onSnapshot, query, orderBy } from '@angular/fire/firestore';
-import { Storage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from '@angular/fire/storage';
+import { Storage, ref, uploadBytesResumable, uploadBytes, getDownloadURL, deleteObject } from '@angular/fire/storage';
 import { Observable } from 'rxjs';
 import { Photo } from '../models/couple.model';
 import { AuthService } from './auth.service';
@@ -50,112 +50,51 @@ export class PhotoService {
     memoryDate: string,
     onProgress: (pct: number) => void
   ): Promise<void> {
-    console.log('[PhotoService.uploadPhoto] INICIO', {
-      coupleId,
-      fileName: file?.name,
-      fileSize: file?.size,
-      fileType: file?.type,
-      lastModified: file?.lastModified ? new Date(file.lastModified).toISOString() : null,
-      caption,
-      place,
-      memoryDate,
-      userAgent: navigator.userAgent,
-      currentUserUid: this.auth.currentUserUid,
-    });
+    console.log('[PhotoService.uploadPhoto] INICIO', JSON.stringify({
+      coupleId, fileName: file?.name, fileSize: file?.size, fileType: file?.type,
+    }));
 
-    return new Promise((resolve, reject) => {
+    return (async () => {
       if (!file) {
-        console.error('[PhotoService.uploadPhoto] ERROR: file es null/undefined, aborto antes de subir');
-        reject(new Error('No file provided'));
-        return;
+        console.error('[PhotoService.uploadPhoto] ERROR: file es null/undefined');
+        throw new Error('No file provided');
       }
       if (!this.auth.currentUserUid) {
-        console.error('[PhotoService.uploadPhoto] ERROR: no hay currentUserUid, posible problema de auth');
-        reject(new Error('No authenticated user'));
-        return;
+        console.error('[PhotoService.uploadPhoto] ERROR: no hay currentUserUid');
+        throw new Error('No authenticated user');
       }
 
       const ext = file.name.split('.').pop();
       const storagePath = `couples/${coupleId}/photos/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      console.log('[PhotoService.uploadPhoto] storagePath generado ->', storagePath);
+      const storageRef = ref(this.storage, storagePath);
 
-      let storageRef;
-      let task;
       try {
-        storageRef = ref(this.storage, storagePath);
-        console.log('[PhotoService.uploadPhoto] storageRef creado OK', storageRef.fullPath);
-
-        task = uploadBytesResumable(storageRef, file);
-        console.log('[PhotoService.uploadPhoto] uploadBytesResumable() llamado, task creada', task.snapshot.state);
-      } catch (e: any) {
-        console.error('[PhotoService.uploadPhoto] ERROR al crear ref/task ANTES de que arranque el upload', {
-          message: e?.message,
-          name: e?.name,
-          stack: e?.stack,
-          fullError: e,
+        onProgress(10);
+        console.log('[PhotoService.uploadPhoto] subiendo con uploadBytes (no resumable)...');
+        const snapshot = await uploadBytes(storageRef, file, {
+          contentType: file.type || 'image/jpeg',
         });
-        reject(e);
-        return;
+        console.log('[PhotoService.uploadPhoto] uploadBytes OK', JSON.stringify({ path: snapshot.ref.fullPath }));
+        onProgress(70);
+
+        const url = await getDownloadURL(snapshot.ref);
+        console.log('[PhotoService.uploadPhoto] downloadURL OK ->', url);
+        onProgress(90);
+
+        const docData = {
+          url, storagePath, uploaderUid: this.auth.currentUserUid!,
+          caption, place, memoryDate, createdAt: new Date(),
+        };
+        await addDoc(collection(this.firestore, `couples/${coupleId}/photos`), docData);
+        console.log('[PhotoService.uploadPhoto] FIN exitoso 🎉');
+        onProgress(100);
+      } catch (e: any) {
+        console.error('[PhotoService.uploadPhoto] ERROR', JSON.stringify({
+          message: e?.message, code: e?.code, status: e?.status_,
+        }));
+        throw e;
       }
-
-      task.on(
-        'state_changed',
-        snap => {
-          const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-          console.log('[PhotoService.uploadPhoto] progreso', {
-            state: snap.state,
-            bytesTransferred: snap.bytesTransferred,
-            totalBytes: snap.totalBytes,
-            pct,
-          });
-          onProgress(pct);
-        },
-        err => {
-          console.error('[PhotoService.uploadPhoto] ERROR durante el upload - code:', err?.code);
-          console.error('[PhotoService.uploadPhoto] ERROR durante el upload - message:', err?.message);
-          console.error('[PhotoService.uploadPhoto] ERROR durante el upload - serverResponse:',
-            JSON.stringify((err as any)?.customData?.serverResponse ?? 'sin serverResponse'));
-          console.error('[PhotoService.uploadPhoto] ERROR durante el upload - status:',
-            (err as any)?.status_ ?? (err as any)?.customData?.status ?? 'sin status');
-          console.error('[PhotoService.uploadPhoto] ERROR durante el upload - fullError stringified:',
-            JSON.stringify(err, Object.getOwnPropertyNames(err)));
-          reject(err);
-        },
-        async () => {
-          console.log('[PhotoService.uploadPhoto] upload completo, bytesTransferred == totalBytes. Pidiendo downloadURL...');
-          try {
-            const url = await getDownloadURL(task.snapshot.ref);
-            console.log('[PhotoService.uploadPhoto] downloadURL obtenida OK ->', url);
-
-            const docData = {
-              url,
-              storagePath,
-              uploaderUid: this.auth.currentUserUid!,
-              caption,
-              place,
-              memoryDate,
-              createdAt: new Date(),
-            } satisfies Omit<Photo, 'id'>;
-
-            console.log('[PhotoService.uploadPhoto] guardando doc en Firestore...', docData);
-            const docRef = await addDoc(collection(this.firestore, `couples/${coupleId}/photos`), docData);
-            console.log('[PhotoService.uploadPhoto] doc guardado OK, id ->', docRef.id);
-
-            console.log('[PhotoService.uploadPhoto] FIN exitoso 🎉');
-            resolve();
-          } catch (e: any) {
-            console.error('[PhotoService.uploadPhoto] ERROR después de subir el archivo (getDownloadURL o addDoc)', {
-              message: e?.message,
-              code: e?.code,
-              name: e?.name,
-              stack: e?.stack,
-              fullError: e,
-            });
-            reject(e);
-          }
-        }
-      );
-    });
+    })();
   }
 
   async deletePhoto(coupleId: string, photo: Photo): Promise<void> {
