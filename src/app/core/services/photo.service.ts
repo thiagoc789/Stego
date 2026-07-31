@@ -111,13 +111,14 @@ export class PhotoService {
           onProgress(pct);
         },
         err => {
-          console.error('[PhotoService.uploadPhoto] ERROR durante el upload (state_changed error callback)', {
-            message: err?.message,
-            code: err?.code,
-            name: err?.name,
-            serverResponse: (err as any)?.customData?.serverResponse,
-            fullError: err,
-          });
+          console.error('[PhotoService.uploadPhoto] ERROR durante el upload - code:', err?.code);
+          console.error('[PhotoService.uploadPhoto] ERROR durante el upload - message:', err?.message);
+          console.error('[PhotoService.uploadPhoto] ERROR durante el upload - serverResponse:',
+            JSON.stringify((err as any)?.customData?.serverResponse ?? 'sin serverResponse'));
+          console.error('[PhotoService.uploadPhoto] ERROR durante el upload - status:',
+            (err as any)?.status_ ?? (err as any)?.customData?.status ?? 'sin status');
+          console.error('[PhotoService.uploadPhoto] ERROR durante el upload - fullError stringified:',
+            JSON.stringify(err, Object.getOwnPropertyNames(err)));
           reject(err);
         },
         async () => {
